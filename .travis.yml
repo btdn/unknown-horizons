@@ -1,4 +1,9 @@
 script:
   - "ls"
 notifications:
-  irc: "chat.freenode.net#travistest"
+  irc:
+    channels:
+      - "chat.freenode.net#travistest"
+    on_success: always
+    on_failure: always
+    nick: noonehasthisnick
