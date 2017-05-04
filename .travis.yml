@@ -1,56 +1,9 @@
-language: python
-sudo: required
-dist: trusty
-python:
-  - "3.4"
-#matrix:
-#  include:
-#    - os: linux
-#      sudo: required
-#      dist: trusty
-#      compiler: clang
-#      python: "3.4"
-
-# command to install dependencies
-addons:
-  apt:
-    sources:
-     - sourceline: 'deb [trusted=yes] https://debian.unknown-horizons.org/travis/ /'
-    # add PPAs with more up-to-date toolchains
-    #- ubuntu-toolchain-r-test
-    #- llvm-toolchain-trusty-3.9
-    #packages:
-    #- clang-3.9
-    #- llvm-3.9-dev
-    #- libclang-3.9-dev
-    #- mesa-common-dev
-    #- libsdl2-dev
-    #- libsdl2-image-dev
-    #- libsdl2-ttf-dev
-    #- libfreetype6-dev
-    #- libopenal-dev
-    #- libasound2-dev
-    #- zlib1g-dev
-    #- libboost-dev
-    #- libboost-system-dev
-    #- libboost-filesystem-dev
-    #- libboost-test-dev
-    #- libtinyxml-dev
-    #- libc6
-    #- libglew-dev
-    #- libvorbis-dev
-    #- libalut-dev
-    #- mesa-utils # for glxinfo
-
 script:
-  - ls
-after_success:
-  - coverage combine
-  - coveralls
+  - "ls"
 notifications:
-  email: false
   irc:
     channels:
-      - "chat.freenode.net#unknown-horizons"
-      - "chat.freenode.net#unknown-horizons-de"
-    nick: travis-ci-uh
+      - "chat.freenode.net#travistest"
+    on_success: always
+    on_failure: always
+    nick: noonehasthisnick
