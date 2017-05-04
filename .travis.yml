@@ -3,7 +3,6 @@ script:
 notifications:
   irc:
     channels:
-      - "chat.freenode.net#unknown-horizons"
       - "chat.freenode.net#travistest"
     on_success: always
     on_failure: always
