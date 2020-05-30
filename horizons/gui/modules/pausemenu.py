@@ -33,7 +33,7 @@ from horizons.util.startgameoptions import StartGameOptions
 class PauseMenu(Window):
 
 	def __init__(self, session, ingame_gui, windows, in_editor_mode=False):
-		super(PauseMenu, self).__init__(windows)
+		super().__init__(windows)
 
 		self._session = session
 		self._ingame_gui = ingame_gui
@@ -46,33 +46,33 @@ class PauseMenu(Window):
 		self._gui.position_technique = 'center:center'
 
 		events = {
-			'load' : self._load_game,
-			'save' : self._save_game,
-			'sett' : lambda: self._windows.open(self.settings_dialog),
-			'help' : ingame_gui.toggle_help,
+			'load': self._load_game,
+			'save': self._save_game,
+			'sett': lambda: self._windows.open(self.settings_dialog),
+			'help': ingame_gui.toggle_help,
 			'start': self._windows.close,
-			'quit' : self._do_quit,
+			'quit': self._do_quit,
 		}
 
 		self._gui.mapEvents({
 			# icons
 			'loadgameButton': events['load'],
 			'savegameButton': events['save'],
-			'settingsLink'  : events['sett'],
-			'helpLink'      : events['help'],
-			'startGame'     : events['start'],
-			'closeButton'   : events['quit'],
+			'settingsLink': events['sett'],
+			'helpLink': events['help'],
+			'startGame': events['start'],
+			'closeButton': events['quit'],
 			# labels
 			'loadgame': events['load'],
 			'savegame': events['save'],
 			'settings': events['sett'],
-			'help'    : events['help'],
-			'start'   : events['start'],
-			'quit'    : events['quit'],
+			'help': events['help'],
+			'start': events['start'],
+			'quit': events['quit'],
 		})
 
 	def open(self):
-		super(PauseMenu, self).open()
+		super().open()
 		PauseCommand(suggestion=True).execute(self._session)
 
 	def show(self):
@@ -82,7 +82,7 @@ class PauseMenu(Window):
 		self._gui.hide()
 
 	def close(self):
-		super(PauseMenu, self).close()
+		super().close()
 		UnPauseCommand(suggestion=True).execute(self._session)
 
 	def _do_quit(self):

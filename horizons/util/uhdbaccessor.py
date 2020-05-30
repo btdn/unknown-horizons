@@ -41,8 +41,7 @@ class UhDbAccessor(DbReader):
 	places, that are data access routines (e.g. unit/building class)."""
 
 	def __init__(self, dbfile):
-		super(UhDbAccessor, self).__init__(dbfile=dbfile)
-
+		super().__init__(dbfile=dbfile)
 
 	# ------------------------------------------------------------------
 	# Db Access Functions start here
@@ -252,7 +251,7 @@ class UhDbAccessor(DbReader):
 	def get_translucent_buildings(self):
 		"""Returns building types that should become translucent on demand"""
 		# use set because of quick contains check
-		return frozenset( id for (id, b) in Entities.buildings.items() if b.translucent )
+		return frozenset(id for (id, b) in Entities.buildings.items() if b.translucent)
 
 	# Weapon table
 
@@ -263,7 +262,6 @@ class UhDbAccessor(DbReader):
 	def get_weapon_attack_radius(self, weapon_id):
 		"""Returns weapon's attack radius modifier."""
 		return self.cached_query("SELECT attack_radius FROM weapon WHERE id = ?", weapon_id)[0][0]
-
 
 	# Units
 

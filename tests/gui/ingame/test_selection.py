@@ -23,7 +23,6 @@ from horizons.command.unit import CreateUnit
 from horizons.constants import UNITS
 from tests.gui import gui_test
 from tests.gui.helper import get_player_ship
-from tests.utils import mark_expected_failure
 
 
 @gui_test(use_dev_map=True, timeout=60)
@@ -89,7 +88,7 @@ def test_selection_groups(gui):
 	# make first group
 	gui.press_key(gui.Key.NUM_2, ctrl=True)
 
-	gui.select( [] )
+	gui.select([])
 	assert not gui.session.selected_instances
 
 	# check group
@@ -109,7 +108,7 @@ def test_selection_groups(gui):
 
 	wh = gui.session.world.player.settlements[0].warehouse
 
-	gui.select( [wh] )
+	gui.select([wh])
 	gui.press_key(gui.Key.NUM_3, ctrl=True)
 
 	# check group again

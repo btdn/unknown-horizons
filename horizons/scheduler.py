@@ -50,7 +50,7 @@ class Scheduler(LivingObject, metaclass=ManualConstructionSingleton):
 		"""
 		@param timer: Timer obj
 		"""
-		super(Scheduler, self).__init__()
+		super().__init__()
 		self.schedule = {}
 		self.additional_cur_tick_schedule = [] # jobs to be executed at the same tick they were added
 		self.calls_by_instance = {} # for get_classinst_calls
@@ -63,7 +63,7 @@ class Scheduler(LivingObject, metaclass=ManualConstructionSingleton):
 		self.schedule = None
 		self.timer.remove_call(self.tick)
 		self.timer = None
-		super(Scheduler, self).end()
+		super().end()
 
 	def tick(self, tick_id):
 		"""Threads main loop
@@ -244,7 +244,7 @@ class Scheduler(LivingObject, metaclass=ManualConstructionSingleton):
 		calls = {}
 		if instance in self.calls_by_instance:
 			for callback_obj in self.calls_by_instance[instance]:
-				if  callback is None or callback_obj.callback == callback:
+				if callback is None or callback_obj.callback == callback:
 					calls[callback_obj] = callback_obj.tick - self.cur_tick
 		return calls
 

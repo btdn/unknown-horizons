@@ -23,6 +23,7 @@ SOFTWARE.
 # http://code.activestate.com/recipes/576447-dummy-object/
 # with some modifications
 
+
 class Dummy:
 	def __getattr__(self, attr):
 		try:
@@ -34,7 +35,7 @@ class Dummy:
 				class B(Dummy):
 					pass
 				return B
-			elif attr == 'VBox' or  attr == 'HBox':
+			elif attr == 'VBox' or attr == 'HBox':
 				class C(Dummy):
 					ATTRIBUTES = Dummy()
 				return C
@@ -43,33 +44,45 @@ class Dummy:
 			if attr in ('__base__', '__bases__', '__basicsize__',
 				'__dictoffset__', '__flags__', '__itemsize__',
 				'__members__', '__methods__', '__mro__', '__name__',
-				'__subclasses__', '__weakrefoffset__',
+				'__subclasses__', '__weakrefoffset__', '__mro_entries__',
 				'_getAttributeNames', 'mro'):
 				raise
 			else:
 				return self
+
 	def __next__(self):
 		raise StopIteration
+
 	def __repr__(self):
 		return 'Dummy()'
+
 	def __init__(self, *args, **kwargs):
 		pass
+
 	def __len__(self):
 		return 0
+
 	def __eq__(self, other):
 		return self is other
+
 	def __hash__(self):
 		return hash(None)
+
 	def __call__(self, *args, **kwargs):
 		return self
+
 	def __trunc__(self):
 		return 0
+
 	def __ge__(self, other):
 		return 0
+
 	def __gt__(self, other):
 		return 0
+
 	def __lt__(self, other):
 		return 0
+
 	def __le__(self, other):
 		return 0
 	__sub__ = __div__ = __mul__ = __floordiv__ = __mod__ = __and__ = __or__ = \

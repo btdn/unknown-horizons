@@ -30,7 +30,7 @@ from horizons.util.startgameoptions import StartGameOptions
 
 class EditorStartMenu(Window):
 	def __init__(self, windows):
-		super(EditorStartMenu, self).__init__(windows)
+		super().__init__(windows)
 
 		self._gui = load_uh_widget('editor_start_menu.xml')
 		self._gui.position_technique = "center:center"
@@ -87,7 +87,7 @@ class EditorCreateMapWidget:
 		self._gui.findChild(name='size_150').marked = True
 
 		for size in self.sizes:
-			option_name = 'size_%d' % size
+			option_name = 'size_{:d}'.format(size)
 			# size of empty map in map editor
 			self._gui.findChild(name=option_name).text = T('{size}x{size} tiles').format(size=size)
 
@@ -97,7 +97,7 @@ class EditorCreateMapWidget:
 
 	def act(self):
 		for size in self.sizes:
-			option_name = 'size_%d' % size
+			option_name = 'size_{:d}'.format(size)
 			if self._gui.findChild(name=option_name).marked:
 				self._windows.close()
 

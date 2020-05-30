@@ -37,7 +37,7 @@ class BuildingClass(IngameType):
 	classstring = 'Building[{id}]'
 
 	def __new__(self, db, id, yaml_data):
-		return super(BuildingClass, self).__new__(self, id, yaml_data)
+		return super().__new__(self, id, yaml_data)
 
 	def __init__(self, db, id, yaml_data):
 		"""
@@ -45,7 +45,7 @@ class BuildingClass(IngameType):
 		@param id: building id.
 		@param db: DbReader
 		"""
-		super(BuildingClass, self).__init__(id, yaml_data)
+		super().__init__(id, yaml_data)
 
 		self.settler_level = yaml_data['tier']
 		self.tooltip_text = self._strip_translation_marks(yaml_data['tooltip_text'])
@@ -94,61 +94,8 @@ class BuildingClass(IngameType):
 		fife.ActionVisual.create(action)
 		for rotation in all_action_sets[action_set][action_id]:
 			params['rot'] = rotation
-			# hacks to solve issue #1379
-			if rotation == 45:
-				params['left'] = 32
-				if cls.size[0] == 3:
-					params["botm"] = 66
-				# hack for charcoal_burning
-				elif cls.size[0] == 2 and cls.size[1] == 3:
-					params["left"] = 0
-					params["botm"] = 42
-				elif cls.size[0] == 2:
-					params["botm"] = 40
-				elif cls.size[0] == 1:
-					params["botm"] = 29
-				else:
-					params['botm'] = 16 * cls.size[0]
-			elif rotation == 135:
-				params['left'] = 32 * cls.size[1]
-				# hack for charcoal_burning
-				if cls.size[0] == 2 and cls.size[1] == 3:
-					params["botm"] = 10
-				else:
-					params['botm'] = 30
-			elif rotation == 225:
-				params['left'] = 32 * (cls.size[0] + cls.size[1] - 1)
-				if cls.size[0] == 3:
-					params["botm"] = 60
-				# hack for brickyard
-				elif cls.size[0] == 2 and cls.size[1] == 4:
-					params["botm"] = 73
-				# hack for charcoal_burning
-				elif cls.size[0] == 2 and cls.size[1] == 3:
-					params["botm"] = 58
-					params["left"] = 160
-				elif cls.size[0] == 2:
-					params["botm"] = 40
-				elif cls.size[0] == 1:
-					params["botm"] = 29
-				else:
-					params['botm'] = 16 * cls.size[1]
-			elif rotation == 315:
-				params['left'] = 32 * cls.size[0]
-				if cls.size[0] == 3:
-					params["botm"] = 96
-				# hack for brickyard and charcoal_burning
-				elif cls.size[0] == 2 and cls.size[1] in (3, 4):
-					params["botm"] = 92
-				elif cls.size[0] == 2:
-					params["botm"] = 56
-				elif cls.size[0] == 1:
-					params["botm"] = 30
-				else:
-					params['botm'] = 16 * (cls.size[0] + cls.size[1] - 1)
-			else:
-				assert False, "Bad rotation for action_set {id}: {rot} for action: {action}".format(**params)
-			path = '{id}+{action}+{rot}:shift:left-{left},bottom+{botm}'.format(**params)
+			assert rotation == 45 or rotation == 135 or rotation == 225 or rotation == 315, "Bad rotation for action_set {id}: {rot} for action: {action}".format(**params)
+			path = '{id}+{action}+{rot}'.format(**params)
 			anim = horizons.globals.fife.animationloader.loadResource(path)
 			action.get2dGfxVisual().addAnimation(int(rotation), anim)
 			action.setDuration(anim.getDuration())

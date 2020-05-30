@@ -28,6 +28,7 @@ called FindPath. You should never ever use this class directly, just through the
 interface.
 """
 
+
 class FindPath:
 	""" Finds best path from source to destination via a*-algo
 	"best path" means path with shortest travel time, which
@@ -182,7 +183,7 @@ class FindPath:
 				                         (x_p1, y), (x_p1, y_p1))
 				              if # conditions are sorted by likelihood in ship worst case
 				                 i not in checked
-				                 and (   i in path_nodes
+				                 and (i in path_nodes
 				                      or i in source_coords
 				                      or i in dest_coords_set)
 				                 and i not in blocked_coords)
@@ -226,7 +227,6 @@ class FindPath:
 						neighbor = (cur_node_coords,
 						            distance_to_neighbor,
 						            distance_to_neighbor + (neighbor[2] - neighbor[1]))
-
 
 			# done processing cur_node
 			checked[cur_node_coords] = cur_node_data

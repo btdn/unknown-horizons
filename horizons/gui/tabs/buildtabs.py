@@ -36,6 +36,7 @@ from horizons.util.yamlcache import YamlCache
 class InvalidBuildMenuFileFormat(Exception):
 	pass
 
+
 class BuildTab(TabInterface):
 	"""
 	Layout data is defined in image_data and text_data.
@@ -58,12 +59,10 @@ class BuildTab(TabInterface):
 	  "content/objects/gui_buildmenu/build_menu_per_type.yaml"
 	  ]
 
-	build_menu_config_per_tier = build_menus[0]
-	build_menu_config_per_type = build_menus[1]
-
-	default_build_menu_config = build_menu_config_per_tier
-
-	cur_build_menu_config = default_build_menu_config
+	layout_per_tier_index = 0
+	layout_per_type_index = 1
+	build_menu_config_per_tier = build_menus[layout_per_tier_index]
+	build_menu_config_per_type = build_menus[layout_per_type_index]
 
 	# NOTE: check for occurrences of this when adding one, you might want to
 	#       add respective code there as well
@@ -120,11 +119,7 @@ class BuildTab(TabInterface):
 		self.headline = T(headline) if headline else headline # don't translate None
 		self.helptext = T(helptext) if helptext else self.headline
 
-		#get build style
-		saved_build_style = horizons.globals.fife.get_uh_setting("Buildstyle")
-		self.cur_build_menu_config = self.__class__.build_menus[saved_build_style]
-
-		super(BuildTab, self).__init__(icon_path=icon_path)
+		super().__init__(icon_path=icon_path)
 
 	@classmethod
 	def get_saved_buildstyle(cls):
@@ -142,6 +137,7 @@ class BuildTab(TabInterface):
 	def set_content(self):
 		"""Parses self.row_definitions and sets the content accordingly"""
 		settlement = LastActivePlayerSettlementManager().get()
+
 		def _set_entry(button, icon, building_id):
 			"""Configure a single build menu button"""
 			if self.unlocking_strategy == self.__class__.unlocking_strategies.single_per_tier and \
@@ -164,8 +160,8 @@ class BuildTab(TabInterface):
 				res_overview = self.session.ingame_gui.resource_overview
 				show_costs = Callback(res_overview.set_construction_mode, settlement, building.costs)
 				button.mapEvents({
-				  button.name + "/mouseEntered/buildtab" : show_costs,
-				  button.name + "/mouseExited/buildtab" : res_overview.close_construction_mode
+				  button.name + "/mouseEntered/buildtab": show_costs,
+				  button.name + "/mouseExited/buildtab": res_overview.close_construction_mode
 				  })
 
 				(enough_res, missing_res) = Build.check_resources({}, building.costs, settlement.owner, [settlement])
@@ -234,7 +230,7 @@ class BuildTab(TabInterface):
 		self.__current_settlement = LastActivePlayerSettlementManager().get()
 		self.__add_changelisteners()
 		self.__class__.last_active_build_tab = self.tabindex
-		super(BuildTab, self).show()
+		super().show()
 
 		button = self.widget.child_finder("switch_build_menu_config_button")
 		self._set_switch_layout_button_image(button)
@@ -242,11 +238,11 @@ class BuildTab(TabInterface):
 
 	def hide(self):
 		self.__remove_changelisteners()
-		super(BuildTab, self).hide()
+		super().hide()
 
 	def _set_switch_layout_button_image(self, button):
 		image_path = "content/gui/icons/tabwidget/buildmenu/"
-		if self.__class__.cur_build_menu_config is self.build_menu_config_per_type:
+		if horizons.globals.fife.get_uh_setting("Buildstyle") == self.layout_per_type_index:
 			button.up_image = image_path + "tier.png"
 		else:
 			button.up_image = image_path + "class.png"
@@ -254,17 +250,16 @@ class BuildTab(TabInterface):
 
 	def _switch_build_menu_config(self):
 		"""Sets next build menu config and recreates the gui"""
-		cur_index = self.__class__.build_menus.index(self.cur_build_menu_config)
+		cur_index = horizons.globals.fife.get_uh_setting("Buildstyle")
 		new_index = (cur_index + 1) % len(self.__class__.build_menus)
-		self.__class__.cur_build_menu_config = self.__class__.build_menus[new_index]
 
 		# after switch set active tab to first
 		self.__class__.last_active_build_tab = 0
-		self.session.ingame_gui.show_build_menu(update=True)
 
 		#save build style
 		horizons.globals.fife.set_uh_setting("Buildstyle", new_index)
 		horizons.globals.fife.save_settings()
+		self.session.ingame_gui.show_build_menu(update=True)
 
 	@classmethod
 	def create_tabs(cls, session, build_callback):

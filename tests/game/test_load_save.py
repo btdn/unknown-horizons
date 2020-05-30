@@ -65,6 +65,7 @@ def test_load_inactive_production():
 
 	session.end()
 
+
 def create_lumberjack_production_session():
 	"""Create a saved game with a producing production and then load it."""
 	session, player = new_session()
@@ -141,7 +142,6 @@ def test_hunter_save_load():
 		while collector.state == old_state:
 			session.run()
 		assert collector.state == new_state, "expected new state {}, got {}".format(new_state, collector.state)
-
 
 	sequence = [
 	  Collector.states.idle,
@@ -228,24 +228,34 @@ def test_settler_level_save_load(s, p):
 
 		settler = Build(BUILDINGS.RESIDENTIAL, 22, 22, island, settlement=settlement)(p)
 		settler.level += test_level
+		settler._update_level_data(True, True)
 		settler_worldid = settler.worldid
+
+		settlement.tax_settings[settler.level] = -0.5
 
 		# make it happy
 		inv = settler.get_component(StorageComponent).inventory
 		to_give = inv.get_free_space_for(RES.HAPPINESS)
 		inv.alter(RES.HAPPINESS, to_give)
+		settler.inhabitants = settler.inhabitants_max
 		level = settler.level
 
 		# wait for it to realize it's supposed to upgrade
 		s.run(seconds=GAME.INGAME_TICK_INTERVAL)
 
+		assert settler.level == level
+
 		session = saveload(session)
 		settler = WorldObject.get_object_by_id(settler_worldid)
 		inv = settler.get_component(StorageComponent).inventory
 
+		assert settler.level == level
+
 		# continue
 		s.run(seconds=GAME.INGAME_TICK_INTERVAL)
 
+		assert inv[RES.BOARDS] == 0
+		assert inv[RES.BRICKS] == 0
 		assert settler.level == level
 		# give upgrade res
 		inv.alter(RES.BOARDS, 100)

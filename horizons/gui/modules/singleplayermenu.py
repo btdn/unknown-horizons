@@ -20,7 +20,6 @@
 # ###################################################
 
 
-
 import json
 import locale
 import logging
@@ -36,7 +35,7 @@ import horizons.main
 from horizons.constants import LANGUAGENAMES, PATHS, VERSION
 from horizons.extscheduler import ExtScheduler
 from horizons.gui.util import load_uh_widget
-from horizons.gui.widgets.minimap import Minimap, iter_minimap_points
+from horizons.gui.widgets.minimap import Minimap, iter_minimap_points_colors
 from horizons.gui.windows import Window
 from horizons.i18n import gettext as T
 from horizons.savegamemanager import SavegameManager
@@ -54,16 +53,16 @@ from .playerdataselection import PlayerDataSelection
 class SingleplayerMenu(Window):
 
 	def __init__(self, windows):
-		super(SingleplayerMenu, self).__init__(windows)
+		super().__init__(windows)
 
 		self._mode = None
 
 		self._gui = load_uh_widget('singleplayermenu.xml')
 		self._gui.mapEvents({
-			'cancel'   : self._windows.close,
-			'okay'     : self.act,
-			'scenario' : Callback(self._select_mode, 'scenario'),
-			'random'   : Callback(self._select_mode, 'random'),
+			'cancel': self._windows.close,
+			'okay': self.act,
+			'scenario': Callback(self._select_mode, 'scenario'),
+			'random': Callback(self._select_mode, 'random'),
 			'free_maps': Callback(self._select_mode, 'free_maps')
 		})
 
@@ -136,11 +135,13 @@ class GameSettingsWidget:
 		              ('disasters', 'MapSettingsDisastersEnabled')]
 
 		for (setting, setting_save_name) in checkboxes:
+
 			def on_box_toggle(setting, setting_save_name):
 				"""Called whenever the checkbox is toggled"""
 				box = self._gui.findChild(name=setting)
 				horizons.globals.fife.set_uh_setting(setting_save_name, box.marked)
 				horizons.globals.fife.save_settings()
+
 			def toggle(setting, setting_save_name):
 				"""Called by the label to toggle the checkbox"""
 				box = self._gui.findChild(name=setting)
@@ -485,7 +486,7 @@ class ScenarioMapWidget:
 		prefer_tutorial = lambda x: ('tutorial' not in x, x)
 		self.maps_display.sort(key=prefer_tutorial)
 
-		self._gui.distributeInitialData({'maplist' : self.maps_display})
+		self._gui.distributeInitialData({'maplist': self.maps_display})
 		self._gui.distributeData({'maplist': 0})
 		self._gui.mapEvents({
 			'maplist/action': self._on_map_change,
@@ -542,7 +543,8 @@ class ScenarioMapWidget:
 		lang_list.items = available_languages
 		lang_list.selected = available_languages.index(selected_language)
 
-		translated_scenario = self.find_map_filename(scenario, selected_language)
+		selected_language_code = LANGUAGENAMES.get_by_value(selected_language)
+		translated_scenario = self.find_map_filename(scenario, selected_language_code)
 		if translated_scenario is None:
 			return
 
@@ -645,5 +647,5 @@ def generate_random_minimap(size, parameters):
 	# communicate via stdout. Sometimes the process seems to print more information, therefore
 	# we add markers around our data so it's easier for the caller to get to the data.
 	args = (location, world, Minimap.COLORS['island'], Minimap.COLORS['water'])
-	data = [(x, y, r, g, b) for (x, y), (r, g, b) in iter_minimap_points(*args)]
+	data = [(x, y, r, g, b) for (x, y), (r, g, b) in iter_minimap_points_colors(*args)]
 	print('DATA', json.dumps(data), 'ENDDATA')

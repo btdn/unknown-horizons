@@ -23,19 +23,25 @@
 
 import distutils.cmd
 import glob
+import json
 import os
 import platform
+import sys
 from distutils.command.build import build
 from distutils.core import setup
 from distutils.spawn import find_executable
 from shutil import copytree, rmtree
 
+import distro
+
+import horizons
 from horizons.constants import VERSION
+from horizons.ext import polib
 
 # Ensure we are in the correct directory
 os.chdir(os.path.realpath(os.path.dirname(__file__)))
 
-if platform.dist()[0].lower() in ('debian', 'ubuntu'):
+if distro.linux_distribution(full_distribution_name=False)[0] in ('debian', 'mint', 'ubuntu'):
 	executable_path = 'games'
 else:
 	executable_path = 'bin'
@@ -62,10 +68,10 @@ for root, dirs, files in os.walk('horizons'):
 	packages.append(root)
 
 # Add enet files for build platform
-type = platform.system().lower()
+systemtype = platform.system().lower()
 arch = platform.machine()
-dir = "horizons/network/{0!s}-x{1!s}".format(type, arch[-2:])
-package_data = {dir: ['*.so']}
+enetdir = "horizons/network/{0!s}-x{1!s}".format(systemtype, arch[-2:])
+package_data = {enetdir: ['*.so']}
 
 
 class _build_i18n(distutils.cmd.Command):
@@ -92,7 +98,7 @@ class _build_i18n(distutils.cmd.Command):
 	def generate_mo_files(self, domain, po_dir):
 		if not os.path.isdir(po_dir):
 			return []
-		po_files = glob.glob("{}/*.po".format(po_dir))
+		po_files = sorted(glob.glob("{}/*.po".format(po_dir)))
 		if po_files and not find_executable('msgfmt'):
 			raise RuntimeError(
 				"Can't generate language files, needs msgfmt. "
@@ -109,6 +115,7 @@ class _build_i18n(distutils.cmd.Command):
 		if "LINGUAS" in os.environ:
 			selected_languages = os.environ["LINGUAS"].split()
 
+		translation_stats = {}
 		mo_files = []
 		for po_file in po_files:
 			lang = os.path.basename(po_file[:-3])
@@ -125,9 +132,26 @@ class _build_i18n(distutils.cmd.Command):
 			if po_mtime > mo_mtime:
 				self.spawn(cmd)
 
+			percent_translated = polib.pofile(po_file).percent_translated()
+			translation_stats[lang] = percent_translated
+
 			targetpath = os.path.join("share/locale", lang, "LC_MESSAGES")
 			mo_files.append((targetpath, [mo_file]))
+
+		# Write translation stats to file and have it included in package
+		stats_filename = os.path.join('content', 'lang', 'stats.json')
+		with open(stats_filename, 'w') as f:
+			json.dump(translation_stats, f)
+
+		self.distribution.data_files.append((os.path.join('share', 'locale'), [stats_filename]))
+
 		return mo_files
+
+	def generate_atlases(self, size):
+		import subprocess
+		horizons_path = os.path.dirname(horizons.__file__)
+		args = [sys.executable, os.path.join(horizons_path, 'engine', 'generate_atlases.py'), str(size)]
+		process = subprocess.Popen(args)
 
 	def run(self):
 		"""
@@ -165,7 +189,7 @@ class _build_i18n(distutils.cmd.Command):
 					mo_files_generated = True
 				data_files.extend(mo_files)
 			except RuntimeError as e:
-				print(e.message)
+				print(str(e))
 				return
 
 		# merge .in with translation
@@ -205,6 +229,9 @@ class _build_i18n(distutils.cmd.Command):
 			if os.path.exists(os.path.join("content", "lang")):
 				rmtree(os.path.join("content", "lang"))
 			copytree(os.path.join("build", "mo"), os.path.join("content", "lang"))
+
+		self.generate_atlases(2048)
+
 
 build.sub_commands.append(('build_i18n', None))
 

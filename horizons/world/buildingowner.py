@@ -31,9 +31,11 @@ this implementation can be viewed as the the common denominator of building hand
 required by World and Island.
 The instances need to provide a get_tile function.
 """
+
+
 class BuildingOwner:
 	def __init__(self, *args, **kwargs):
-		super(BuildingOwner, self).__init__(*args, **kwargs)
+		super().__init__(*args, **kwargs) # TODO: check if call is needed
 		self.provider_buildings = ProviderHandler()
 		self.buildings = []
 
@@ -71,7 +73,7 @@ class BuildingOwner:
 		for point in rect:
 			try:
 				if player is None or self.get_tile(point).settlement.owner == player:
-					settlements.add( self.get_tile(point).settlement )
+					settlements.add(self.get_tile(point).settlement)
 			except AttributeError:
 				# some tiles don't have settlements, we don't explicitly check for them cause
 				# its faster this way.

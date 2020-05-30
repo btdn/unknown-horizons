@@ -54,7 +54,7 @@ class BuildRelatedTab(OverviewTab):
 
 		# load all related buildings from DB
 		building_ids = self.instance.session.db.get_related_building_ids_for_menu(self.instance.id)
-		sorted_ids = sorted([(b, Entities.buildings[b].settler_level) for b in building_ids], key=lambda x : x[1])
+		sorted_ids = sorted([(b, Entities.buildings[b].settler_level) for b in building_ids], key=lambda x: x[1])
 		container = self.__get_new_container()
 		for i, (building_id, level) in enumerate(sorted_ids):
 			if level > self.instance.owner.settler_level:
@@ -70,7 +70,7 @@ class BuildRelatedTab(OverviewTab):
 			container.findChild(name="build_button_bg_container").addChild(button_bg)
 		# Still need to add last container
 		parent_container.addChild(container)
-		super(BuildRelatedTab, self).refresh()
+		super().refresh()
 
 	def __get_new_container(self):
 		"""

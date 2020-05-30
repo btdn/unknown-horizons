@@ -48,6 +48,7 @@ class IngameGui(LivingObject):
 	def __init__(self, session):
 		self.session = session
 
+		self.which = None
 		self.cursor = None
 		self.coordinates_tooltip = None
 		self.keylistener = IngameKeyListener(self.session)
@@ -73,8 +74,8 @@ class IngameGui(LivingObject):
 		self.mainhud.mapEvents({
 			'zoomIn': self.session.view.zoom_in,
 			'zoomOut': self.session.view.zoom_out,
-			'rotateRight': Callback.ChainedCallbacks(self.session.view.rotate_right, self.minimap.rotate_right),
-			'rotateLeft': Callback.ChainedCallbacks(self.session.view.rotate_left, self.minimap.rotate_left),
+			'rotateRight': Callback.ChainedCallbacks(self.session.view.rotate_right, self.minimap.update_rotation),
+			'rotateLeft': Callback.ChainedCallbacks(self.session.view.rotate_left, self.minimap.update_rotation),
 			'gameMenuButton': self.toggle_pause,
 		})
 
@@ -115,7 +116,7 @@ class IngameGui(LivingObject):
 			self.cursor.end()
 			self.cursor = None
 
-		super(IngameGui, self).end()
+		super().end()
 
 	def handle_selection_group(self, num, ctrl_pressed):
 		# Someday, maybe cool stuff will be possible here.
@@ -184,6 +185,7 @@ class IngameGui(LivingObject):
 			'tile_layer': TileLayingTool
 		}[which]
 		self.cursor = klass(self.session, *args, **kwargs)
+		self.which = which
 
 	def _update_zoom(self, message):
 		"""Enable/disable zoom buttons"""
@@ -205,15 +207,16 @@ class SettingsTab(TabInterface):
 	lazy_loading = False
 
 	def __init__(self, world_editor, ingame_gui):
-		super(SettingsTab, self).__init__(widget=self.widget)
+		super().__init__(widget=self.widget)
 
 		self._world_editor = world_editor
 		self._current_tile = 'sand'
 		self._ingame_gui = ingame_gui
+		self._tile_selected = 0
 
 		# Brush size
 		for i in range(EDITOR.MIN_BRUSH_SIZE, EDITOR.MAX_BRUSH_SIZE + 1):
-			b = self.widget.findChild(name='size_%d' % i)
+			b = self.widget.findChild(name='size_{:d}'.format(i))
 			b.capture(Callback(self._change_brush_size, i))
 
 		# Activate radio button for default brush size
@@ -238,6 +241,7 @@ class SettingsTab(TabInterface):
 		})
 
 	def _set_cursor_tile(self, tile):
+		self._tile_selected = 1
 		self._current_tile = tile
 		self._ingame_gui.set_cursor('tile_layer', self._current_tile)
 
@@ -245,7 +249,11 @@ class SettingsTab(TabInterface):
 		horizons.globals.fife.set_cursor_image('default')
 
 	def _cursor_outside(self):
-		self._ingame_gui.set_cursor('tile_layer', self._current_tile)
+		if (self._tile_selected == 1 or self._ingame_gui.which == 'tile_layer'):
+			self._tile_selected = 0
+			self._ingame_gui.set_cursor('tile_layer', self._current_tile)
+		else:
+			self._ingame_gui.set_cursor('default')
 
 	def _get_tile_image(self, tile):
 		# TODO TileLayingTool does almost the same thing, perhaps put this in a better place
@@ -262,9 +270,9 @@ class SettingsTab(TabInterface):
 		  'box': 'content/gui/icons/ship/smallbutton.png',
 		}
 
-		b = self.widget.findChild(name='size_%d' % self._world_editor.brush_size)
+		b = self.widget.findChild(name='size_{:d}'.format(self._world_editor.brush_size))
 		b.up_image = images['box']
 
 		self._world_editor.brush_size = size
-		b = self.widget.findChild(name='size_%d' % self._world_editor.brush_size)
+		b = self.widget.findChild(name='size_{:d}'.format(self._world_editor.brush_size))
 		b.up_image = images['box_highlighted']

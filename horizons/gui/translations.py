@@ -1,3 +1,4 @@
+# Encoding: utf-8
 # ###################################################
 # Copyright (C) 2008-2017 The Unknown Horizons Team
 # team@unknown-horizons.org
@@ -46,6 +47,7 @@ from horizons.constants import VERSION
 from horizons.i18n import gettext as T
 
 text_translations = {} # type: Dict[str, Dict[Tuple[str, str], str]]
+
 
 def set_translations():
 	global text_translations
@@ -406,11 +408,10 @@ def set_translations():
 		('move_up'                      , 'helptext'): T("Move up"),
 		},
 
-	'trade_history_item.xml' : {
+	'scrollbar_resource_selection.xml' : {
 		},
 
-	'traderoute_resource_selection.xml' : {
-		('select_res_label'             , 'text'    ): T("Select a resource:"),
+	'trade_history_item.xml' : {
 		},
 
 	'captains_log.xml' : {
@@ -432,6 +433,9 @@ def set_translations():
 		('lbl_route_activity'           , 'text'    ): T("Route activity:"),
 		('lbl_wait_at_load'             , 'text'    ): T("Wait at load:"),
 		('lbl_wait_at_unload'           , 'text'    ): T("Wait at unload:"),
+		('player_name_label'            , 'text'    ): T("Player Name:"),
+		('select_res_label'             , 'text'    ): T("Select a resource:"),
+		('warehouse_name_label'         , 'text'    ): T("Island Name:"),
 		('okButton'                     , 'helptext'): T("Exit"),
 		('start_route'                  , 'helptext'): T("Start route"),
 		},
@@ -641,7 +645,6 @@ def set_translations():
 		('headline_saving'              , 'text'    ): T("Saving"),
 		('headline_sound'               , 'text'    ): T("Sound"),
 		('middle_mouse_pan_lbl'         , 'text'    ): T("Middle mouse button pan:"),
-		('minimap_rotation_label'       , 'text'    ): T("Rotate minimap with map:"),
 		('mouse_sensitivity_label'      , 'text'    ): T("Mouse sensitivity:"),
 		('music_volume_label'           , 'text'    ): T("Music volume:"),
 		('network_port_lbl'             , 'text'    ): T("Network port:"),
@@ -663,7 +666,6 @@ def set_translations():
 		('edge_scrolling_label'         , 'helptext'): T("Whether to move the viewport when the mouse pointer is close to map edges"),
 		('fps_label'                    , 'helptext'): T("Set the maximum frame rate used. Default: 60 fps."),
 		('middle_mouse_pan_lbl'         , 'helptext'): T("When enabled, dragging the middle mouse button will pan the camera"),
-		('minimap_rotation_label'       , 'helptext'): T("Whether to also rotate the minimap whenever the regular map is rotated"),
 		('mouse_sensitivity_label'      , 'helptext'): T("0 is default system settings"),
 		('network_port_lbl'             , 'helptext'): T("If set to 0, use the router default"),
 		('quote_type_label'             , 'helptext'): T("What kind of quote to display while loading a game"),

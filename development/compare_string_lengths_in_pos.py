@@ -33,14 +33,14 @@ if len(sys.argv) < 2:
 
 filename = sys.argv[1]
 
-file = open(filename, "r")
+readfile = open(filename, "r")
 
 i = 0
 translations = {}
 
 state = 0
 
-for line in file:
+for line in readfile:
 	line = line.strip()
 
 	if state == 0:
@@ -66,7 +66,7 @@ for line in file:
 
 
 for t in translations:
-	orig  = translations[t][0]
+	orig = translations[t][0]
 	trans = translations[t][1]
 
 	if orig.startswith("#") or trans.startswith("#"):

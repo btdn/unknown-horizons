@@ -20,7 +20,6 @@
 # ###################################################
 
 
-
 from fife import fife
 from fife.extensions.pychan.widgets import Button
 
@@ -35,7 +34,7 @@ from horizons.util.python.callback import Callback
 class HotkeyConfiguration:
 
 	def __init__(self):
-		super(HotkeyConfiguration, self).__init__()
+		super().__init__() # TODO: check whether this call is needed
 
 		self.widget = load_uh_widget('hotkeys.xml')
 		self.buttons = []
@@ -56,13 +55,12 @@ class HotkeyConfiguration:
 		# Stores whether the last button pressed was for a primary or secondary binding (1 or 2)
 		self.last_column = 1
 
-		# There are some keys which are not detected by the event widget/keyPressed
-		# In that case, the key presses are detected by the listener, which calls _detect_keypress
+		# This used to go though the widget's key events, but fifechan has different keynames
+		# Using a fife keylistener ensures that the in-game keys always match
 		self.listener = HotkeysListener(self._detect_keypress)
 
-		self.widget.mapEvents({self.widget.name + '/keyPressed' : self._detect_keypress})
 		self.widget.findChild(name=OkButton.DEFAULT_NAME).capture(self.save_settings)
-		self.widget.mapEvents({OkButton.DEFAULT_NAME : self.save_settings})
+		self.widget.mapEvents({OkButton.DEFAULT_NAME: self.save_settings})
 		self.widget.findChild(name="reset_to_default").capture(self.reset_to_default)
 
 	def _build_interface(self):
@@ -71,8 +69,8 @@ class HotkeyConfiguration:
 		for i, action in enumerate(self.actions):
 			button = self._create_button(action, i)
 			sec_button = self._create_button(action, i)
-			button.mapEvents({button.name + '/mouseClicked' : Callback(self._detect_click_on_button, button, 1)})
-			sec_button.mapEvents({button.name + '/mouseClicked' : Callback(self._detect_click_on_button, sec_button, 2)})
+			button.mapEvents({button.name + '/mouseClicked': Callback(self._detect_click_on_button, button, 1)})
+			sec_button.mapEvents({button.name + '/mouseClicked': Callback(self._detect_click_on_button, sec_button, 2)})
 			button_container.addChild(button)
 			sec_button_container.addChild(sec_button)
 			self.buttons.append(button)
@@ -81,7 +79,7 @@ class HotkeyConfiguration:
 
 	def _create_button(self, action, index):
 		"""Important! The button name is set to index so that when a button is pressed, we know its index"""
-		button = Button()
+		button = Button(is_focusable=False)
 		button.name = str(index)
 		button.max_size = button.min_size = (100, 18)
 		return button
@@ -146,7 +144,7 @@ class HotkeyConfiguration:
 
 			message = T("{key} is already set to {action}.").format(key=key_name, action=oldaction)
 			message += " " + T("Would you like to overwrite it?")
-			confirmed = horizons.main._modules.gui.open_popup(T("Confirmation for overwriting"), message, show_cancel_button=True)
+			confirmed = horizons.main.gui.open_popup(T("Confirmation for overwriting"), message, show_cancel_button=True)
 			if confirmed:
 				horizons.globals.fife.replace_key_for_action(oldaction, key_name, "UNASSIGNED")
 			else:
@@ -221,7 +219,7 @@ class HotkeysListener(fife.IKeyListener):
 	"""HotkeysListener Class to process events of hotkeys binding interface"""
 
 	def __init__(self, detect_keypress):
-		super(HotkeysListener, self).__init__()
+		super().__init__()
 		fife.IKeyListener.__init__(self)
 
 		self.detect = detect_keypress
@@ -234,7 +232,7 @@ class HotkeysListener(fife.IKeyListener):
 
 	def end(self):
 		horizons.globals.fife.eventmanager.removeKeyListener(self)
-		super(HotkeysListener, self).end()
+		super().end()
 
 	def keyPressed(self, evt):
 		self.detect(evt)

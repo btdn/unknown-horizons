@@ -100,14 +100,13 @@ class UnitProduction(ChangingProduction):
 		all_needed_res = sum(amount for res, amount in self.original_prod_line.consumed_res.items()
 		                            if res != RES.GOLD)
 		part_of_whole_production = float(removed_res_without_gold) / all_needed_res
-		prod_time = Scheduler().get_ticks( part_of_whole_production * self._prod_line.time )
+		prod_time = Scheduler().get_ticks(part_of_whole_production * self._prod_line.time)
 		prod_time = max(prod_time, 1) # wait at least 1 tick
 		# do part of production and call this again when done
 		Scheduler().add_new_object(self._produce, self, prod_time)
 
-
 	def _finished_producing(self, **kwargs):
-		super(UnitProduction, self)._finished_producing(continue_producing=False, **kwargs)
+		super()._finished_producing(continue_producing=False, **kwargs)
 		self._state = PRODUCTION.STATES.done
 		# reset prodline
 		self._prod_line = self._prod_line.get_original_copy()

@@ -50,8 +50,9 @@ class Utilization:
 			# all those values are relative values, so we can just do this:
 			interval = diff * PRODUCTION.STATISTICAL_WINDOW
 			self._old_capacity_utilization = (cur_tick + interval, # expiration date
-						                      limit, capac < limit )
+						                      limit, capac < limit)
 		return self._old_capacity_utilization[2]
+
 
 class FullUtilization(Utilization):
 	"""Used for producers where no utilization calculation is necessary"""

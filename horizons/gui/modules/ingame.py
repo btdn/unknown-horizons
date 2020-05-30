@@ -41,7 +41,7 @@ class ChatDialog(Dialog):
 	focus = 'msg'
 
 	def __init__(self, windows, session):
-		super(ChatDialog, self).__init__(windows)
+		super().__init__(windows)
 		self._session = session
 
 	def prepare(self):
@@ -65,7 +65,7 @@ class ChangeNameDialog(Dialog):
 	focus = 'new_name'
 
 	def __init__(self, windows, session):
-		super(ChangeNameDialog, self).__init__(windows)
+		super().__init__(windows)
 		self._session = session
 
 	def prepare(self, instance):
@@ -170,7 +170,8 @@ class CityInfo:
 		city_name_label.helptext = helptext
 
 		foundlabel = self._child_finder('owner_emblem')
-		foundlabel.image = 'content/gui/icons/widgets/cityinfo/settlement_%s.png' % (self._settlement.owner.color.name)
+		foundlabel.image = 'content/gui/icons/widgets/cityinfo/settlement_{}.png'.format(
+			self._settlement.owner.color.name)
 		foundlabel.helptext = self._settlement.owner.name
 
 		foundlabel = self._child_finder('city_name')

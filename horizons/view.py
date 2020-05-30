@@ -23,7 +23,7 @@ import math
 import time
 
 from fife import fife
-from fife.fife import AudioSpaceCoordinate
+from fife.fife import AudioSpaceCoordinate, Point3D
 
 import horizons.globals
 from horizons.constants import GAME_SPEED, LAYERS, VIEW
@@ -36,8 +36,9 @@ class View(ChangeListener):
 	"""Class that takes care of all the camera and rendering stuff."""
 
 	def __init__(self):
-		super(View, self).__init__()
+		super().__init__()
 		self.world = None
+		self.logbook = None
 		self.model = horizons.globals.fife.engine.getModel()
 		self.map = self.model.createMap("map")
 
@@ -73,7 +74,7 @@ class View(ChangeListener):
 
 		rect = fife.Rect(0, 0, horizons.globals.fife.engine_settings.getScreenWidth(),
 		                       horizons.globals.fife.engine_settings.getScreenHeight())
-		self.cam = self.map.addCamera("main", self.layers[-1], rect)
+		self.cam = self.map.addCamera("main", rect)
 		self.cam.setCellImageDimensions(*VIEW.CELL_IMAGE_DIMENSIONS)
 		self.cam.setRotation(VIEW.ROTATION)
 		self.cam.setTilt(VIEW.TILT)
@@ -100,16 +101,17 @@ class View(ChangeListener):
 	def end(self):
 		horizons.globals.fife.pump.remove(self.do_autoscroll)
 		self.model.deleteMaps()
-		super(View, self).end()
+		super().end()
 
 	def center(self, x, y):
 		"""Sets the camera position
 		@param center: tuple with x and y coordinate (float or int) of tile to center
 		"""
-		loc = self.cam.getLocationRef()
+		loc = self.cam.getLocation()
 		pos = loc.getExactLayerCoordinatesRef()
 		pos.x = x
 		pos.y = y
+		self.cam.setLocation(loc)
 		self.cam.refresh()
 		self._changed()
 
@@ -186,21 +188,43 @@ class View(ChangeListener):
 		map_point = self.cam.toMapCoordinates(screen_point, False)
 		self.center(map_point.x, map_point.y)
 
+	def SetLogBook(self, logbook):
+		if self.logbook is None:
+			self.logbook = logbook
+
 	def zoom_out(self, track_cursor=False):
-		zoom = self.cam.getZoom() * VIEW.ZOOM_LEVELS_FACTOR
-		if zoom < VIEW.ZOOM_MIN:
-			zoom = VIEW.ZOOM_MIN
-		if track_cursor:
-			self._prepare_zoom_to_cursor(zoom)
-		self.zoom = zoom
+		if self.logbook is not None:
+			if not self.logbook.is_visible():
+				zoom = self.cam.getZoom() * VIEW.ZOOM_LEVELS_FACTOR
+				if zoom < VIEW.ZOOM_MIN:
+					zoom = VIEW.ZOOM_MIN
+				if track_cursor:
+					self._prepare_zoom_to_cursor(zoom)
+				self.zoom = zoom
+		else:
+			zoom = self.cam.getZoom() * VIEW.ZOOM_LEVELS_FACTOR
+			if zoom < VIEW.ZOOM_MIN:
+				zoom = VIEW.ZOOM_MIN
+			if track_cursor:
+				self._prepare_zoom_to_cursor(zoom)
+			self.zoom = zoom
 
 	def zoom_in(self, track_cursor=False):
-		zoom = self.cam.getZoom() / VIEW.ZOOM_LEVELS_FACTOR
-		if zoom > VIEW.ZOOM_MAX:
-			zoom = VIEW.ZOOM_MAX
-		if track_cursor:
-			self._prepare_zoom_to_cursor(zoom)
-		self.zoom = zoom
+		if self.logbook is not None:
+			if not self.logbook.is_visible():
+				zoom = self.cam.getZoom() / VIEW.ZOOM_LEVELS_FACTOR
+				if zoom > VIEW.ZOOM_MAX:
+					zoom = VIEW.ZOOM_MAX
+				if track_cursor:
+					self._prepare_zoom_to_cursor(zoom)
+				self.zoom = zoom
+		else:
+			zoom = self.cam.getZoom() / VIEW.ZOOM_LEVELS_FACTOR
+			if zoom > VIEW.ZOOM_MAX:
+				zoom = VIEW.ZOOM_MAX
+			if track_cursor:
+				self._prepare_zoom_to_cursor(zoom)
+			self.zoom = zoom
 
 	@property
 	def zoom(self):
@@ -222,15 +246,22 @@ class View(ChangeListener):
 		self._changed()
 
 	def get_displayed_area(self):
-		"""Returns the coords of what is displayed on the screen as Rect"""
-		coords = self.cam.getLocationRef().getLayerCoordinates()
-		cell_dim = self.cam.getCellImageDimensions()
-		width_x = horizons.globals.fife.engine_settings.getScreenWidth() // cell_dim.x + 1
-		width_y = horizons.globals.fife.engine_settings.getScreenHeight() // cell_dim.y + 1
-		screen_width_as_coords = (width_x // self.zoom, width_y // self.zoom)
-		return Rect.init_from_topleft_and_size(coords.x - (screen_width_as_coords[0] // 2),
-		                                       coords.y - (screen_width_as_coords[1] // 2),
-		                                       *screen_width_as_coords)
+		"""
+		Returns the coords (clockwise, beginning in the top-left corner) of what is
+		displayed on the screen.
+		"""
+		screen_width = horizons.globals.fife.engine_settings.getScreenWidth()
+		screen_height = horizons.globals.fife.engine_settings.getScreenHeight()
+
+		points = []
+		for screen_x, screen_y in [
+				(0, 0),
+				(screen_width, 0),
+				(screen_width, screen_height),
+				(0, screen_height)]:
+			map_point = self.cam.toMapCoordinates(Point3D(screen_x, screen_y), False)
+			points.append((map_point.x, map_point.y))
+		return points
 
 	def save(self, db):
 		loc = self.cam.getLocation().getExactLayerCoordinates()

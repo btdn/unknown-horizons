@@ -33,49 +33,11 @@ def find_enet_module():
 	not None.
 	"""
 
-	# Try to find installed version first
 	try:
 		import enet
 		return enet
 	except ImportError:
-		pass
-
-	# If not installed, we try to find a suitable library in libs/
-
-	lib_path = os.path.join(os.path.dirname(__file__), "libs")
-
-	sys_platform = platform.system().lower()
-
-	arch = platform.architecture()[0]
-	if arch == '32bit':
-		arch = '86'
-	elif arch == '64bit':
-		arch = '64'
-	else:
-		assert False, "Failed to detect system architecture!"
-
-	# Generic identifier, e.g. linux-64
-	directory = "{}-x{}".format(sys_platform, arch)
-
-	# Python version-specific, e.g. linux-64-27. If this is not found, we fall
-	# back to the more generic version.
-	version = platform.python_version_tuple()
-	directory_pyversion = "{}-{}{}".format(directory, version[0], version[1])
-
-	if os.path.exists(os.path.join(lib_path, directory_pyversion)):
-		path = os.path.join(lib_path, directory_pyversion)
-	else:
-		path = os.path.join(lib_path, directory)
-
-	sys.path.append(path)
-
-	try:
-		import enet
-		return enet
-	except ImportError:
-		pass
-
-	return None
+		return None
 
 
 enet = find_enet_module()
@@ -88,35 +50,45 @@ if not hasattr(enet, 'PEER_STATE_DISCONNECTED') and hasattr(enet, 'PEER_STATE_DI
 class NetworkException(Exception):
 	pass
 
+
 class SoftNetworkException(NetworkException):
 	pass
 
+
 class PacketTooLarge(NetworkException):
 	pass
+
 
 class NotConnected(NetworkException):
 	def __str__(self):
 		return "Client is not connected"
 
+
 class ClientException(NetworkException):
 	pass
+
 
 class AlreadyConnected(ClientException):
 	pass
 
+
 class NotInGameLobby(ClientException):
 	pass
+
 
 class NotInServerMode(ClientException):
 	pass
 
+
 class UnableToConnect(ClientException):
 	pass
 
+
 class CommandError(ClientException):
 	def __init__(self, message, cmd_type):
-		super(ClientException, self).__init__(message)
+		super().__init__(message)
 		self.cmd_type = cmd_type
+
 
 class FatalError(ClientException):
 	pass

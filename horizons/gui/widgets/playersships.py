@@ -36,17 +36,17 @@ class PlayersShips(StatsWidget):
 	widget_file_name = 'ships_list.xml'
 
 	def __init__(self, session):
-		super(PlayersShips, self).__init__(session)
+		super().__init__(session)
 
 	def refresh(self):
-		super(PlayersShips, self).refresh()
+		super().refresh()
 		player = self.session.world.player
 		self._clear_entries()
 		self._gui.findChild(name='headline').text = T("Ships of {player}").format(player=self.session.world.player.name)
 
 		sequence_number = 0
 		events = {}
-		for ship in sorted(self.session.world.ships, key = lambda ship: (ship.get_component(NamedComponent).name, ship.worldid)):
+		for ship in sorted(self.session.world.ships, key=lambda ship: (ship.get_component(NamedComponent).name, ship.worldid)):
 			if ship.owner is player and ship.has_component(SelectableComponent):
 				sequence_number += 1
 				name_label, rename_icon, status_label, status_position = \
@@ -99,7 +99,7 @@ class PlayersShips(StatsWidget):
 
 		health = Label(name='health_{:d}'.format(ship.worldid))
 		health_component = ship.get_component(HealthComponent)
-		health.text = '%d/%d' % (health_component.health, health_component.max_health)
+		health.text = '{:.1f}/{:.1f}'.format(health_component.health, health_component.max_health)
 		health.min_size = health.max_size = (65, 20)
 
 		status = Label(name='status_{:d}'.format(ship.worldid))

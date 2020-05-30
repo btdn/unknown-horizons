@@ -38,7 +38,7 @@ class InvalidScenarioFileFormat(Exception):
 	def __init__(self, msg=None):
 		if msg is None:
 			msg = "Invalid scenario file."
-		super(InvalidScenarioFileFormat, self).__init__(msg)
+		super().__init__(msg)
 
 
 class ScenarioEventHandler(LivingObject):
@@ -82,7 +82,6 @@ class ScenarioEventHandler(LivingObject):
 			self._apply_data(self._parse_yaml_file(scenariofile))
 
 		self.sleep_ticks_remaining = 0
-
 
 	def start(self):
 		# Add the check_events method to the scheduler to be checked every few seconds
@@ -227,7 +226,7 @@ class ScenarioEventHandler(LivingObject):
 		yaml_code = dump_dict_to_yaml(data)
 		# remove last } so we can add stuff
 		yaml_code = yaml_code.rsplit('}\n', 1)[0]
-		yaml_code += ', events: [ {} ] }'.format(', '.join(event.to_yaml() for event in self._events))
+		yaml_code += ", events: [ {} ] }}".format(', '.join(event.to_yaml() for event in self._events))
 		return yaml_code
 
 
@@ -263,9 +262,9 @@ class _Event:
 
 	def to_yaml(self):
 		"""Returns yaml representation of self"""
-		return  '{ actions: [ %s ] , conditions: [ %s ]  }' % (
-			    ', '.join(action.to_yaml() for action in self.actions),
-				', '.join(cond.to_yaml() for cond in self.conditions))
+		return '{{ actions: [ {} ] , conditions: [ {} ]  }}'.format(
+			', '.join(action.to_yaml() for action in self.actions),
+			', '.join(cond.to_yaml() for cond in self.conditions))
 
 
 class _Action:
@@ -291,7 +290,7 @@ class _Action:
 	def to_yaml(self):
 		"""Returns yaml representation of self"""
 		arguments_yaml = dump_dict_to_yaml(self.arguments)
-		return "{arguments: {}, type: {}}".format(arguments_yaml, self.action_type)
+		return "{{ arguments: {}, type: {}}}".format(arguments_yaml, self.action_type)
 
 
 class _Condition:
@@ -320,7 +319,7 @@ class _Condition:
 	def to_yaml(self):
 		"""Returns yaml representation of self"""
 		arguments_yaml = dump_dict_to_yaml(self.arguments)
-		return '{arguments: {}, type: "{}"}'.format(arguments_yaml, self.cond_type)
+		return '{{arguments: {}, type: "{}"}}'.format(arguments_yaml, self.cond_type)
 
 
 def dump_dict_to_yaml(data):

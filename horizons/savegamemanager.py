@@ -53,7 +53,7 @@ class SavegameManager:
 	"""
 	log = logging.getLogger("savegamemanager")
 
-	savegame_dir = os.path.join(PATHS.USER_DIR, "save")
+	savegame_dir = PATHS.SAVEGAME_DIR
 	autosave_dir = os.path.join(savegame_dir, "autosave")
 	multiplayersave_dir = os.path.join(savegame_dir, "multiplayer_save")
 	quicksave_dir = os.path.join(savegame_dir, "quicksave")
@@ -100,7 +100,9 @@ class SavegameManager:
 		@return: list of names to be displayed for each file.
 		"""
 		displaynames = []
+
 		def get_timestamp_string(savegameinfo):
+
 			if savegameinfo['timestamp'] == -1:
 				return ""
 			timestamp = time.localtime(savegameinfo['timestamp'])
@@ -209,8 +211,8 @@ class SavegameManager:
 	@classmethod
 	def get_recommended_number_of_players(cls, mapfile):
 		"""Returns amount of players recommended for a map *mapfile*."""
-		dbdata = DbReader(mapfile) \
-			("SELECT value FROM properties WHERE name = ?", "players_recommended")
+		dbdata = DbReader(mapfile)(
+			"SELECT value FROM properties WHERE name = ?", "players_recommended")
 		if dbdata:
 			return dbdata[0][0]
 		else:
@@ -256,7 +258,7 @@ class SavegameManager:
 
 		# hide whatever dialog we have
 		dialog_hidden = False
-		windows = horizons.main._modules.session.ingame_gui.windows
+		windows = horizons.main.session.ingame_gui.windows
 		if windows.visible:
 			dialog_hidden = True
 			windows.hide_all()

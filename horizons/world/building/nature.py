@@ -5,7 +5,6 @@ from horizons.world.building.building import BasicBuilding
 from horizons.world.building.buildingresourcehandler import BuildingResourceHandler
 from horizons.world.production.producer import Producer
 
-
 # ###################################################
 # Copyright (C) 2008-2017 The Unknown Horizons Team
 # team@unknown-horizons.org
@@ -33,16 +32,18 @@ class NatureBuilding(BuildableRect, BasicBuilding):
 	walkable = True
 	layer = LAYERS.OBJECTS
 
+
 class NatureBuildingResourceHandler(BuildingResourceHandler, NatureBuilding):
 	# sorry, but this class is to be removed soon anyway
 	pass
 
+
 class Field(NatureBuildingResourceHandler):
 	walkable = False
-	layer = LAYERS.FIELDS
+	layer = LAYERS.OBJECTS
 
 	def initialize(self, **kwargs):
-		super(Field, self).initialize(**kwargs)
+		super().initialize(**kwargs)
 
 		if self.owner.is_local_player:
 			# make sure to have a farm nearby when we can reasonably assume that the crops are fully grown
@@ -56,8 +57,8 @@ class Field(NatureBuildingResourceHandler):
 
 	def _check_covered_by_farm(self):
 		"""Warn in case there is no farm nearby to cultivate the field"""
-		farm_in_range = any( (farm.position.distance( self.position ) <= farm.radius) for farm in
-		                     self.settlement.buildings_by_id[BUILDINGS.FARM] )
+		farm_in_range = any((farm.position.distance(self.position) <= farm.radius) for farm in
+		                     self.settlement.buildings_by_id[BUILDINGS.FARM])
 		if not farm_in_range and self.owner.is_local_player:
 			pos = self.position.origin
 			self.session.ingame_gui.message_widget.add(point=pos, string_id="FIELD_NEEDS_FARM",
@@ -68,15 +69,17 @@ class Tree(NatureBuildingResourceHandler):
 	buildable_upon = True
 	layer = LAYERS.OBJECTS
 
+
 class ResourceDeposit(NatureBuilding):
 	"""Class for stuff like clay deposits."""
 	tearable = False
 	layer = LAYERS.OBJECTS
 	walkable = False
 
+
 class Fish(BuildableSingleEverywhere, BuildingResourceHandler, BasicBuilding):
 	def __init__(self, *args, **kwargs):
-		super(Fish, self).__init__(*args, **kwargs)
+		super().__init__(*args, **kwargs)
 		self.last_usage_tick = -1000000 # a long time ago
 
 		# Make the fish run at different speeds
@@ -84,14 +87,20 @@ class Fish(BuildableSingleEverywhere, BuildingResourceHandler, BasicBuilding):
 		self._instance.setTimeMultiplier(multiplier)
 
 	def load(self, db, worldid):
-		super(Fish, self).load(db, worldid)
+		super().load(db, worldid)
 		self.last_usage_tick = db.get_last_fish_usage_tick(worldid)
 
 	def save(self, db):
-		super(Fish, self).save(db)
+		super().save(db)
 		translated_tick = self.last_usage_tick - Scheduler().cur_tick # pre-translate for the loading process
 		db("INSERT INTO fish_data(rowid, last_usage_tick) VALUES(?, ?)", self.worldid, translated_tick)
 
 	def remove_incoming_collector(self, collector):
-		super(Fish, self).remove_incoming_collector(collector)
+		super().remove_incoming_collector(collector)
 		self.last_usage_tick = Scheduler().cur_tick
+
+
+class Ambient(NatureBuilding):
+	"""Class for ambient graphics such as rocks and flowers."""
+	buildable_upon = True
+	layer = LAYERS.OBJECTS

@@ -103,7 +103,7 @@ class BuildingTool(NavigationTool):
 	gui = None # type: Widget
 
 	def __init__(self, session, building, ship=None, build_related=None):
-		super(BuildingTool, self).__init__(session)
+		super().__init__(session)
 		assert not (ship and build_related)
 		self.renderer = self.session.view.renderer['InstanceRenderer']
 		self.ship = ship
@@ -125,7 +125,7 @@ class BuildingTool(NavigationTool):
 		if self.ship is not None:
 			self._build_logic = ShipBuildingToolLogic(ship)
 		elif build_related is not None:
-			self._build_logic = BuildRelatedBuildingToolLogic(self, weakref.ref(build_related) )
+			self._build_logic = BuildRelatedBuildingToolLogic(self, weakref.ref(build_related))
 		else:
 			self._build_logic = SettlementBuildingToolLogic(self)
 
@@ -138,7 +138,6 @@ class BuildingTool(NavigationTool):
 
 		SettlementInventoryUpdated.subscribe(self.update_preview)
 		PlayerInventoryUpdated.subscribe(self.update_preview)
-
 
 	def __init_selectable_component(self):
 		self.selectable_comp = SelectableBuildingComponent
@@ -172,18 +171,18 @@ class BuildingTool(NavigationTool):
 
 		renderer = self.session.view.renderer['InstanceRenderer']
 		if tiles_to_check is None or new_buildings: # first run, check all
-			buildings_to_select = [ buildings_to_select
-			                        for settlement in self.session.world.settlements
-			                        if settlement.owner.is_local_player
-			                        for bid in related
-			                        for buildings_to_select in settlement.buildings_by_id[bid] ]
+			buildings_to_select = [buildings_to_select
+			                       for settlement in self.session.world.settlements
+			                       if settlement.owner.is_local_player
+			                       for bid in related
+			                       for buildings_to_select in settlement.buildings_by_id[bid]]
 
 			tiles = self.selectable_comp.select_many(buildings_to_select, renderer)
 			self._related_buildings_selected_tiles = frozenset(tiles)
 		else: # we don't need to check all
 			# duplicates filtered later
-			buildings_to_select = [ tile.object for tile in tiles_to_check if
-			                        tile.object is not None and tile.object.id in related ]
+			buildings_to_select = [tile.object for tile in tiles_to_check if
+			                       tile.object is not None and tile.object.id in related]
 			for tile in tiles_to_check:
 				# check if we need to recolor the tiles
 				if tile in self._related_buildings_selected_tiles:
@@ -215,23 +214,23 @@ class BuildingTool(NavigationTool):
 		ExtScheduler().rem_all_classinst_calls(self)
 		SettlementInventoryUpdated.discard(self.update_preview)
 		PlayerInventoryUpdated.discard(self.update_preview)
-		super(BuildingTool, self).remove()
+		super().remove()
 
 	def _on_worldobject_deleted(self, message):
 		# remove references to this object
 		self._related_buildings.discard(message.sender)
 		self._transparencified_instances = \
-		  set( i for i in self._transparencified_instances if
-		       i() is not None and int(i().getId()) != message.worldid )
-		check_building = lambda b : b.worldid != message.worldid
-		self._highlighted_buildings = set( tup for tup in self._highlighted_buildings if check_building(tup[0]) )
-		self._related_buildings = set( filter(check_building, self._related_buildings) )
+		  set(i for i in self._transparencified_instances if
+		      i() is not None and int(i().getId()) != message.worldid)
+		check_building = lambda b: b.worldid != message.worldid
+		self._highlighted_buildings = set(tup for tup in self._highlighted_buildings if check_building(tup[0]))
+		self._related_buildings = set(filter(check_building, self._related_buildings))
 
 	def load_gui(self):
 		if self.__class__.gui is None:
 			self.__class__.gui = load_uh_widget("place_building.xml")
 			self.__class__.gui.position_technique = "right-1:top+157"
-		self.__class__.gui.mapEvents({"rotate_left" : self.rotate_left,
+		self.__class__.gui.mapEvents({"rotate_left": self.rotate_left,
 		                              "rotate_right": self.rotate_right})
 		# set translated building name in gui
 		self.__class__.gui.findChild(name='headline').text = T('Build {building}').format(building=T(self._class.name))
@@ -299,7 +298,7 @@ class BuildingTool(NavigationTool):
 		self.buildings = new_buildings
 		# resize list of action set ids to new buildings
 		self.buildings_action_set_ids = self.buildings_action_set_ids + ([None] * (len(self.buildings) - len(self.buildings_action_set_ids)))
-		self.buildings_action_set_ids = self.buildings_action_set_ids[ : len(self.buildings) ]
+		self.buildings_action_set_ids = self.buildings_action_set_ids[: len(self.buildings)]
 		# delete old infos
 		self.buildings_fife_instances.clear()
 		self.buildings_missing_resources.clear()
@@ -336,7 +335,6 @@ class BuildingTool(NavigationTool):
 				if settlement is None:
 					building.buildable = False
 
-
 			# check required resources
 			(enough_res, missing_res) = Build.check_resources(needed_resources, self._class.costs,
 			                                                  self.session.world.player, [settlement, self.ship])
@@ -361,7 +359,7 @@ class BuildingTool(NavigationTool):
 
 		self.session.ingame_gui.resource_overview.set_construction_mode(
 			self.ship if self.ship is not None else settlement,
-		  needed_resources
+			needed_resources
 		)
 		self._add_listeners(self.ship if self.ship is not None else settlement)
 
@@ -399,12 +397,11 @@ class BuildingTool(NavigationTool):
 			for tile in settlement.get_tiles_in_radius(building.position, self._class.radius, include_self=True):
 				obj = tile.object
 				if (obj is not None) and (obj.id in related) and (obj not in self._highlighted_buildings):
-					self._highlighted_buildings.add( (obj, False) ) # False: was_selected, see _restore_highlighted_buildings
+					self._highlighted_buildings.add((obj, False)) # False: was_selected, see _restore_highlighted_buildings
 					# currently same code as highlight_related_buildings
 					inst = obj.fife_instance
 					self.renderer.addOutlined(inst, *self.related_building_outline)
 					self.renderer.addColored(inst, *self.related_building_color)
-
 
 	def _make_surrounding_transparent(self, building):
 		"""Makes the surrounding of building_position transparent and hide buildings
@@ -467,7 +464,7 @@ class BuildingTool(NavigationTool):
 				self.renderer.addColored(inst, *self.selectable_comp.selection_color)
 			self.renderer.removeOutlined(inst)
 			modified_tiles.extend(
-			  ( self.session.world.get_tile(point) for point in building.position )
+			  (self.session.world.get_tile(point) for point in building.position)
 			)
 		self._highlighted_buildings.clear()
 		self.highlight_buildable(modified_tiles)
@@ -480,7 +477,7 @@ class BuildingTool(NavigationTool):
 
 	def mouseMoved(self, evt):
 		self.log.debug("BuildingTool mouseMoved")
-		super(BuildingTool, self).mouseMoved(evt)
+		super().mouseMoved(evt)
 		point = self.get_world_location(evt)
 		if self.start_point != point:
 			self.start_point = point
@@ -490,20 +487,20 @@ class BuildingTool(NavigationTool):
 	def mousePressed(self, evt):
 		self.log.debug("BuildingTool mousePressed")
 		if evt.isConsumedByWidgets():
-			super(BuildingTool, self).mousePressed(evt)
+			super().mousePressed(evt)
 			return
 		if evt.getButton() == fife.MouseEvent.RIGHT:
 			self.on_escape()
 		elif evt.getButton() == fife.MouseEvent.LEFT:
 			pass
 		else:
-			super(BuildingTool, self).mousePressed(evt)
+			super().mousePressed(evt)
 			return
 		evt.consume()
 
 	def mouseDragged(self, evt):
 		self.log.debug("BuildingTool mouseDragged")
-		super(BuildingTool, self).mouseDragged(evt)
+		super().mouseDragged(evt)
 		point = self.get_world_location(evt)
 		if self.start_point is not None:
 			self._check_update_preview(point)
@@ -513,7 +510,7 @@ class BuildingTool(NavigationTool):
 		"""Actually build."""
 		self.log.debug("BuildingTool mouseReleased")
 		if evt.isConsumedByWidgets():
-			super(BuildingTool, self).mouseReleased(evt)
+			super().mouseReleased(evt)
 		elif evt.getButton() == fife.MouseEvent.LEFT:
 			point = self.get_world_location(evt)
 
@@ -555,7 +552,7 @@ class BuildingTool(NavigationTool):
 				self.on_escape()
 			evt.consume()
 		elif evt.getButton() != fife.MouseEvent.RIGHT:
-			super(BuildingTool, self).mouseReleased(evt)
+			super().mouseReleased(evt)
 
 	def do_build(self):
 		"""Actually builds the previews
@@ -611,10 +608,10 @@ class BuildingTool(NavigationTool):
 					# check whether to issue a missing res notification
 					# we need the localized resource name here
 					elif building in self.buildings_missing_resources:
-						res_name = self.session.db.get_res_name( self.buildings_missing_resources[building] )
+						res_name = self.session.db.get_res_name(self.buildings_missing_resources[building])
 						self.session.ingame_gui.message_widget.add(
 						  point=building.position.origin,
-						  string_id='NEED_MORE_RES', message_dict={'resource' : res_name})
+						  string_id='NEED_MORE_RES', message_dict={'resource': res_name})
 
 		self.buildings = []
 		self.buildings_action_set_ids = []
@@ -697,7 +694,7 @@ class BuildingTool(NavigationTool):
 					fife_instance.get2dGfxVisual().setTransparency(0)
 				else:
 					# restore regular translucency value, can also be different
-					fife_instance.get2dGfxVisual().setTransparency( BUILDINGS.TRANSPARENCY_VALUE )
+					fife_instance.get2dGfxVisual().setTransparency(BUILDINGS.TRANSPARENCY_VALUE)
 		self._transparencified_instances.clear()
 
 	def _remove_coloring(self):
@@ -818,8 +815,10 @@ class SettlementBuildingToolLogic:
 	# Using messages now.
 	def add_change_listener(self, instance, building_tool):
 		pass
+
 	def remove_change_listener(self, instance, building_tool):
 		pass
+
 	def continue_build(self):
 		pass
 
@@ -827,7 +826,7 @@ class SettlementBuildingToolLogic:
 class BuildRelatedBuildingToolLogic(SettlementBuildingToolLogic):
 	"""Same as normal build, except quitting it drops to the build related tab."""
 	def __init__(self, building_tool, instance):
-		super(BuildRelatedBuildingToolLogic, self).__init__(building_tool)
+		super().__init__(building_tool)
 		# instance must be weakref
 		self.instance = instance
 
@@ -836,7 +835,7 @@ class BuildRelatedBuildingToolLogic(SettlementBuildingToolLogic):
 		self.instance().get_component(SelectableComponent).show_menu(jump_to_tabclass=BuildRelatedTab)
 
 	def on_escape(self, session):
-		super(BuildRelatedBuildingToolLogic, self).on_escape(session)
+		super().on_escape(session)
 		self._reshow_tab()
 
 	def continue_build(self):

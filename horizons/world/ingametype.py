@@ -101,7 +101,7 @@ class IngameType(type):
 
 			self._name = self._level_specific_names[start_tier] # default name: lowest available
 		else: # assume just one string
-			self._name = self._strip_translation_marks( name_data )
+			self._name = self._strip_translation_marks(name_data)
 		self.radius = yaml_data['radius']
 		self.component_templates = yaml_data['components']
 		self.action_sets = yaml_data['actionsets']
@@ -146,8 +146,8 @@ class IngameType(type):
 
 	def _parse_component_templates(self):
 		"""Prepares misc data in self.component_templates"""
-		producer = [ comp for comp in self.component_templates if
-		             isinstance(comp, dict) and next(iter(comp.keys())) == 'ProducerComponent' ]
+		producer = [comp for comp in self.component_templates if
+		            isinstance(comp, dict) and next(iter(comp.keys())) == 'ProducerComponent']
 		if producer:
 			# we want to support string production line ids, the code should still only see integers
 			# therefore we do a deterministic string -> int conversion here
@@ -167,7 +167,7 @@ class IngameType(type):
 					# on this data type, so problems might occur, also with respect to performance.
 					# in principle, strings and longs should also be supported, but for the sake of
 					# safety, we use ints.
-					new_key = int( new_key % 2**31 ) # this ensures it's an integer on all reasonable platforms
+					new_key = int(new_key % 2**31) # this ensures it's an integer on all reasonable platforms
 				if new_key in new_data:
 					raise Exception('Error: production line id conflict.'
 					                ' Please change "{}" to anything else for "{}"'
@@ -175,7 +175,6 @@ class IngameType(type):
 				new_data[new_key] = v
 
 			producer_data['productionlines'] = new_data
-
 
 	@property
 	def _fife_object(self):

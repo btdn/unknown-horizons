@@ -40,7 +40,7 @@ from horizons.util.python.callback import Callback
 
 class LogBook(PickBeltWidget, Window):
 	"""Implementation of the logbook as described here:
-	http://wiki.unknown-horizons.org/w/Message_System
+	https://github.com/unknown-horizons/unknown-horizons/wiki/Message-System
 
 	It displays longer messages, which are essential for scenarios.
 	Headings can be specified for each entry.
@@ -57,7 +57,7 @@ class LogBook(PickBeltWidget, Window):
 		self.statistics_index = [i for i, sec in self.sections].index('statistics')
 		self.logbook_index = [i for i, sec in self.sections].index('logbook')
 		self._page_ids = {} # dict mapping self._cur_entry to message.msgcount
-		super(LogBook, self).__init__()
+		super().__init__()
 		self.session = session
 		self._windows = windows
 		self._parameters = [] # list of lists of all parameters added to a logbook page
@@ -82,13 +82,13 @@ class LogBook(PickBeltWidget, Window):
 		"""Initial gui setup for all subpages accessible through pickbelts."""
 		self._gui = self.get_widget()
 		self._gui.mapEvents({
-		  OkButton.DEFAULT_NAME : self._windows.close,
-		  'backwardButton' : Callback(self._scroll, -2),
-		  'forwardButton' : Callback(self._scroll, 2),
-		  'stats_players' : Callback(self.show_statswidget, widget='players'),
-		  'stats_settlements' : Callback(self.show_statswidget, widget='settlements'),
-		  'stats_ships' : Callback(self.show_statswidget, widget='ships'),
-		  'chatTextField' : self._send_chat_message,
+		  OkButton.DEFAULT_NAME: self._windows.close,
+		  'backwardButton': Callback(self._scroll, -2),
+		  'forwardButton': Callback(self._scroll, 2),
+		  'stats_players': Callback(self.show_statswidget, widget='players'),
+		  'stats_settlements': Callback(self.show_statswidget, widget='settlements'),
+		  'stats_ships': Callback(self.show_statswidget, widget='ships'),
+		  'chatTextField': self._send_chat_message,
 		  })
 
 		# stuff in the game message / chat history subwidget
@@ -114,7 +114,7 @@ class LogBook(PickBeltWidget, Window):
 			self._hide_statswidgets()
 		if self.statistics_index == number:
 			self.show_statswidget(self.last_stats_widget)
-		super(LogBook, self).update_view(number)
+		super().update_view(number)
 
 	def save(self, db):
 		db("INSERT INTO logbook(widgets) VALUES(?)", json.dumps(self._parameters))
@@ -413,7 +413,6 @@ class LogBook(PickBeltWidget, Window):
 			# we don't care which one is shown currently (if any), just hide all of them
 			statswidget.hide()
 		self.stats_visible = None
-
 
 
 ########

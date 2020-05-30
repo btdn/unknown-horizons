@@ -28,7 +28,7 @@ from horizons.component.collectingcomponent import CollectingComponent
 from horizons.component.componentholder import ComponentHolder
 from horizons.component.storagecomponent import StorageComponent
 from horizons.constants import GAME, LAYERS, RES
-from horizons.engine import Fife
+from horizons.i18n import disable_translations
 from horizons.scheduler import Scheduler
 from horizons.util.loaders.actionsetloader import ActionSetLoader
 from horizons.util.shapes import ConstRect, Point, distances
@@ -59,7 +59,7 @@ class BasicBuilding(ComponentHolder, ConcreteObject):
 	"""
 	def __init__(self, x, y, rotation, owner, island, level=None, **kwargs):
 		self.__pre_init(owner, rotation, Point(x, y), level=level)
-		super(BasicBuilding, self).__init__(x=x, y=y, rotation=rotation, owner=owner,
+		super().__init__(x=x, y=y, rotation=rotation, owner=owner,
 		                                    island=island, **kwargs)
 		self.__init()
 		self.island = island
@@ -119,11 +119,11 @@ class BasicBuilding(ComponentHolder, ConcreteObject):
 		if hasattr(self, "disaster"):
 			self.disaster.recover(self)
 		self.island.remove_building(self)
-		super(BasicBuilding, self).remove()
+		super().remove()
 		# NOTE: removing layers from the renderer here will affect others players too!
 
 	def save(self, db):
-		super(BasicBuilding, self).save(db)
+		super().save(db)
 		db("INSERT INTO building (rowid, type, x, y, rotation, location, level) \
 		   VALUES (?, ?, ?, ?, ?, ?, ?)",
 		                                self.worldid, self.__class__.id, self.position.origin.x,
@@ -142,7 +142,7 @@ class BasicBuilding(ComponentHolder, ConcreteObject):
 		# early init before super() call
 		self.__pre_init(owner, rotation, Point(x, y), level=level)
 
-		super(BasicBuilding, self).load(db, worldid)
+		super().load(db, worldid)
 
 		remaining_ticks_of_month = None
 		if self.has_running_costs:
@@ -158,7 +158,6 @@ class BasicBuilding(ComponentHolder, ConcreteObject):
 				remaining_ticks_of_month = db_data[0][0]
 
 		self.__init(remaining_ticks_of_month=remaining_ticks_of_month)
-
 
 		# island.add_building handles registration of building for island and settlement
 		self.island.add_building(self, self.owner, load=True)
@@ -231,62 +230,24 @@ class BasicBuilding(ComponentHolder, ConcreteObject):
 		#rotation = cls.check_build_rotation(session, rotation, x, y)
 		# TODO: replace this with new buildable api
 		# IDEA: save rotation in savegame
-		facing_loc = fife.Location(session.view.layers[cls.layer])
-		instance_coords = list((x, y, 0))
-		layer_coords = list((x, y, 0))
+
 		width, length = cls.size
+		if rotation == 135 or rotation == 315:
+			# if you look at a non-square builing from a 45 degree angle it looks
+			# different than from a 135 degree angle
+			# when you rotate it the width becomes the length and the length becomes the width
+			width, length = length, width
 
-		# NOTE:
-		# nobody actually knows how the code below works.
-		# it's for adapting the facing location and instance coords in
-		# different rotations, and works with all quadratic buildings (tested up to 4x4)
-		# for the first unquadratic building (2x4), a hack fix was put into it.
-		# the plan for fixing this code in general is to wait until there are more
-		# unquadratic buildings, and figure out a pattern of the placement error,
-		# then fix that generally.
+		# the drawing origin is the center of it's area, minus 0.5
+		# the 0.5 isn't really necessary, but other code is aligned with the 0.5 shift
+		# this is at least for the gridoverlay, and the location of a build preview relative to the mouse
+		# it this is changed, it should also be changed for ground tiles (world/ground.py) and units
+		instance_coords = [x + width / 2 - 0.5, y + length / 2 - 0.5, 0]
 
-		if rotation == 45:
-			layer_coords[0] = x + width + 3
-
-			if width == 2 and length == 4:
-				# HACK: fix for 4x2 buildings
-				instance_coords[0] -= 1
-				instance_coords[1] += 1
-
-		elif rotation == 135:
-			instance_coords[1] = y + length - 1
-			layer_coords[1] = y - length - 3
-
-			if width == 2 and length == 4:
-				# HACK: fix for 4x2 buildings
-				instance_coords[0] += 1
-				instance_coords[1] -= 1
-
-		elif rotation == 225:
-			instance_coords = list(( x + width - 1, y + length - 1, 0))
-			layer_coords[0] = x - width - 3
-
-			if width == 2 and length == 4:
-				# HACK: fix for 4x2 buildings
-				instance_coords[0] += 1
-				instance_coords[1] -= 1
-
-		elif rotation == 315:
-			instance_coords[0] = x + width - 1
-			layer_coords[1] = y + length + 3
-
-			if width == 2 and length == 4:
-				# HACK: fix for 4x2 buildings
-				instance_coords[0] += 1
-				instance_coords[1] -= 1
-
-		else:
-			return None
 		instance = session.view.layers[cls.layer].createInstance(
 			cls._fife_object,
-			fife.ModelCoordinate(*instance_coords),
+			fife.ExactModelCoordinate(*instance_coords),
 			world_id)
-		facing_loc.setLayerCoordinates(fife.ModelCoordinate(*layer_coords))
 
 		if action_set_id is None:
 			action_set_id = cls.get_random_action_set(level=level)
@@ -301,11 +262,7 @@ class BasicBuilding(ComponentHolder, ConcreteObject):
 			else:
 				# set first action
 				action = list(action_set.keys())[0]
-
-		if (Fife.getVersion() >= (0, 3, 6)):
-			instance.actRepeat(action + "_" + str(action_set_id), facing_loc)
-		else:
-			instance.act(action + "_" + str(action_set_id), facing_loc, True)
+		instance.actRepeat("{}_{}".format(action, action_set_id), rotation)
 		return (instance, action_set_id)
 
 	@classmethod
@@ -323,8 +280,9 @@ class BasicBuilding(ComponentHolder, ConcreteObject):
 		to start production for example."""
 		pass
 
-	def __unicode__(self): # debug
-		return '{}(id={};worldid={})'.format(self.name, self.id, getattr(self, 'worldid', 'none'))
+	def __str__(self):
+		with disable_translations():
+			return '{}(id={};worldid={})'.format(self.name, self.id, getattr(self, 'worldid', 'none'))
 
 
 class DefaultBuilding(BasicBuilding, BuildableSingle):

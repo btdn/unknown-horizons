@@ -57,6 +57,7 @@ def toggle_health_for_all_health_instances(world):
 				instance.draw_health(remove_only=True)
 				world.session.view.remove_change_listener(instance.draw_health)
 
+
 def toggle_translucency(world):
 	"""Make certain building types translucent"""
 	if not hasattr(world, "_translucent_buildings"):
@@ -70,14 +71,14 @@ def toggle_translucency(world):
 		for b in world.get_all_buildings():
 			if b.id in building_types:
 				fife_instance = b._instance
-				add( create_weakref(fife_instance) )
+				add(create_weakref(fife_instance))
 				fife_instance.keep_translucency = True
-				fife_instance.get2dGfxVisual().setTransparency( BUILDINGS.TRANSPARENCY_VALUE )
+				fife_instance.get2dGfxVisual().setTransparency(BUILDINGS.TRANSPARENCY_VALUE)
 
 	else: # undo translucency
 		for inst in world._translucent_buildings:
 			try:
-				inst().get2dGfxVisual().setTransparency( 0 )
+				inst().get2dGfxVisual().setTransparency(0)
 				inst().keep_translucency = False
 			except AttributeError:
 				pass # obj has been deleted, inst() returned None
@@ -247,6 +248,7 @@ def add_nature_objects(world, natural_resource_multiplier):
 	Tree = Entities.buildings[BUILDINGS.TREE]
 	FishDeposit = Entities.buildings[BUILDINGS.FISH_DEPOSIT]
 	fish_directions = [(i, j) for i in range(-1, 2) for j in range(-1, 2)]
+	Ambient = Entities.buildings[BUILDINGS.AMBIENT]
 
 	# TODO HACK BAD THING hack the component template to make trees start finished
 	Tree.component_templates[1]['ProducerComponent']['start_finished'] = True
@@ -265,7 +267,6 @@ def add_nature_objects(world, natural_resource_multiplier):
 					if world.session.random.random() > WILD_ANIMAL.FOOD_AVAILABLE_ON_START:
 						building.get_component(StorageComponent).inventory.alter(RES.WILDANIMALFOOD, -1)
 
-
 			# add tree to every nth tile and an animal to one in every M trees
 			if check_tile_for_tree(world, position, newTile) and world.session.random.randint(0, 20) == 0 and \
 			   Tree.check_build(world.session, tile, check_settlement=False):
@@ -275,6 +276,13 @@ def add_nature_objects(world, natural_resource_multiplier):
 					CreateUnit(island.worldid, UNITS.WILD_ANIMAL, x, y)(issuer=None)
 				if world.session.random.random() > WILD_ANIMAL.FOOD_AVAILABLE_ON_START:
 					building.get_component(StorageComponent).inventory.alter(RES.WILDANIMALFOOD, -1)
+
+			if world.session.random.randint(0, 20) == 0 and \
+					Ambient.check_build(world.session, tile, check_settlement=False) and \
+					check_tile_for_tree(world, position, newTile):
+				# same check as trees can also be used for ambient stuff
+				building = Build(Ambient, x, y, island, 45 + world.session.random.randint(0, 3) * 90,
+				                 ownerless=True)(issuer=None)
 
 			if 'coastline' in tile.classes and world.session.random.random() < natural_resource_multiplier / 4.0:
 				# try to place fish: from the current position go to a random directions twice
@@ -328,6 +336,7 @@ def get_random_possible_ground_unit_position(world):
 			if (x, y) in island.path_nodes.nodes:
 				return Point(x, y)
 
+
 def get_random_possible_ship_position(world):
 	"""Returns a random position in water, that is not at the border of the world"""
 	offset = 2
@@ -342,7 +351,7 @@ def get_random_possible_ship_position(world):
 		position_possible = True
 		for first_sign in (-1, 0, 1):
 			for second_sign in (-1, 0, 1):
-				point_to_check = Point( x + offset * first_sign, y + offset * second_sign )
+				point_to_check = Point(x + offset * first_sign, y + offset * second_sign)
 				if world.get_island(point_to_check) is not None:
 					position_possible = False
 					break
@@ -352,6 +361,7 @@ def get_random_possible_ship_position(world):
 		break # all checks successful
 
 	return Point(x, y)
+
 
 def get_random_possible_coastal_ship_position(world):
 	"""Returns a random position in water, that is not at the border of the world
@@ -374,6 +384,6 @@ def get_random_possible_coastal_ship_position(world):
 		# check if there is an island nearby (check only important coords)
 		for first_sign in (-1, 0, 1):
 			for second_sign in (-1, 0, 1):
-				point_to_check = Point( x + first_sign, y + second_sign )
+				point_to_check = Point(x + first_sign, y + second_sign)
 				if world.get_island(point_to_check) is not None:
 					return result

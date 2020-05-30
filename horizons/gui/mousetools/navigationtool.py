@@ -36,15 +36,17 @@ from horizons.util.worldobject import WorldObject
 class NavigationTool(CursorTool):
 	"""Navigation Class to process mouse actions ingame"""
 
-
 	last_event_pos = fife.ScreenPoint(0, 0) # last received mouse event position, fife.ScreenPoint
 
 	send_hover_instances_update = True
 	HOVER_INSTANCES_UPDATE_DELAY = 1 # sec
 	last_hover_instances = WeakList()
 
+	consumed_by_widgets = False
+
 	def __init__(self, session):
-		super(NavigationTool, self).__init__(session)
+		super().__init__(session)
+		self.setGlobalListener(True)
 		self._last_mmb_scroll_point = [0, 0]
 		# coordinates of last mouse positions
 		self.last_exact_world_location = fife.ExactModelCoordinate()
@@ -77,7 +79,7 @@ class NavigationTool(CursorTool):
 					return CoordsTooltip(cursor_tool)
 
 			def __init__(self, cursor_tool, **kwargs):
-				super(CoordsTooltip, self).__init__(**kwargs)
+				super().__init__(**kwargs)
 				cursor_tool.session.ingame_gui.coordinates_tooltip = self
 				self.cursor_tool = cursor_tool
 				self.enabled = False
@@ -91,8 +93,12 @@ class NavigationTool(CursorTool):
 
 			def show_evt(self, evt):
 				if self.enabled:
+					if evt.isConsumedByWidgets():
+						if self.icon.tooltip_shown:
+							self.icon.hide_tooltip()
+						return
 					x, y = self.cursor_tool.get_world_location(evt).to_tuple()
-					self.icon.helptext = '%d, %d ' % (x, y) + T("Press H to remove this hint")
+					self.icon.helptext = '{:d}, {:d} '.format(x, y) + T("Press H to remove this hint")
 					self.icon.position_tooltip(evt)
 					self.icon.show_tooltip()
 
@@ -105,7 +111,7 @@ class NavigationTool(CursorTool):
 			ExtScheduler().rem_call(self, self._send_hover_instance_upate)
 
 		horizons.globals.fife.eventmanager.removeCommandListener(self.cmdlist)
-		super(NavigationTool, self).remove()
+		super().remove()
 
 	def mousePressed(self, evt):
 		if evt.getButton() == fife.MouseEvent.MIDDLE:
@@ -119,12 +125,13 @@ class NavigationTool(CursorTool):
 				self.middle_scroll_active = False
 
 	def mouseDragged(self, evt):
+		self.consumed_by_widgets = evt.isConsumedByWidgets()
 		if evt.getButton() == fife.MouseEvent.MIDDLE:
 			if horizons.globals.fife.get_uh_setting("MiddleMousePan"):
 				if self.middle_scroll_active:
-					scroll_by = ( self._last_mmb_scroll_point[0] - evt.getX(),
-					              self._last_mmb_scroll_point[1] - evt.getY() )
-					self.session.view.scroll( *scroll_by )
+					scroll_by = (self._last_mmb_scroll_point[0] - evt.getX(),
+					             self._last_mmb_scroll_point[1] - evt.getY())
+					self.session.view.scroll(*scroll_by)
 					self._last_mmb_scroll_point = (evt.getX(), evt.getY())
 		else:
 			# Else the event will mistakenly be delegated if the left mouse button is hit while
@@ -137,6 +144,8 @@ class NavigationTool(CursorTool):
 		if not self.session.world.inited:
 			return
 
+		self.consumed_by_widgets = evt.isConsumedByWidgets()
+
 		self.tooltip.show_evt(evt)
 		# don't overwrite this last_event_pos instance. Due to class
 		# hierarchy, it would write to the lowest class (e.g. SelectionTool)
@@ -147,7 +156,7 @@ class NavigationTool(CursorTool):
 		# Status menu update
 		current = self.get_exact_world_location(evt)
 
-		distance_ge = lambda a, b, epsilon : abs((a.x - b.x) ** 2 + (a.y - b.y) ** 2) >= epsilon ** 2
+		distance_ge = lambda a, b, epsilon: abs((a.x - b.x) ** 2 + (a.y - b.y) ** 2) >= epsilon ** 2
 
 		if distance_ge(current, self.last_exact_world_location, 4): # update every 4 tiles for settlement info
 			self.last_exact_world_location = current
@@ -210,6 +219,10 @@ class NavigationTool(CursorTool):
 		@param where: anything supporting getX/getY
 		@param layers: list of layer ids to search for. Default to OBJECTS
 		"""
+
+		if self.consumed_by_widgets:
+			return []
+
 		if layers is None:
 			layers = [LAYERS.OBJECTS]
 
@@ -244,7 +257,7 @@ class NavigationTool(CursorTool):
 		return hover_instances
 
 	def end(self):
-		super(NavigationTool, self).end()
+		super().end()
 		if self._hover_instances_update_scheduled:
 			ExtScheduler().rem_all_classinst_calls(self)
 		self.helptext = None

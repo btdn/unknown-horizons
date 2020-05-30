@@ -26,12 +26,12 @@ from fife import fife
 
 from horizons.command.uioptions import ClearTradeSlot, SetTradeSlot
 from horizons.component.tradepostcomponent import TradePostComponent
-from horizons.constants import TRADER
+from horizons.constants import STORAGE, TRADER
 from horizons.extscheduler import ExtScheduler
 from horizons.gui.tabs.tabinterface import TabInterface
 from horizons.gui.util import create_resource_selection_dialog, get_res_icon_path, load_uh_widget
 from horizons.gui.widgets.tradehistoryitem import TradeHistoryItem
-from horizons.i18n import gettext as T
+from horizons.i18n import gettext as T, gettext_lazy as LazyT
 from horizons.util.python.callback import Callback
 from horizons.util.worldobject import WorldObject
 
@@ -52,6 +52,8 @@ class BuySellTab(TabInterface):
 
 	dummy_icon_path = "icons/resources/none_gray"
 
+	helptext = LazyT('Trade')
+
 	def __init__(self, instance):
 		"""Set up the GUI and game logic for the buyselltab."""
 		self.inited = False # prevents execution of commands during init
@@ -60,7 +62,7 @@ class BuySellTab(TabInterface):
 		self.trade_post = instance.settlement.get_component(TradePostComponent)
 		assert isinstance(self.trade_post, TradePostComponent)
 
-		super(BuySellTab, self).__init__()
+		super().__init__()
 
 	def init_widget(self):
 		# don't access instance beyond this point, only components
@@ -86,7 +88,6 @@ class BuySellTab(TabInterface):
 		self.trade_history_widget_cache = {} # {(tick, player_id, resource_id, amount, gold): widget, ...}
 
 		self.hide()
-		self.helptext = T("Trade")
 		self.inited = True
 
 	def hide(self):
@@ -106,7 +107,7 @@ class BuySellTab(TabInterface):
 	def is_visible(self):
 		# this tab sometimes is made up an extra widget, so it must also be considered
 		# when checking for visibility
-		return super(BuySellTab, self).is_visible() or \
+		return super().is_visible() or \
 		       (self.resources is not None and self.resources.isVisible())
 
 	def _refresh_trade_history(self):
@@ -151,8 +152,8 @@ class BuySellTab(TabInterface):
 			slot.findChild(name='button').path = self.dummy_icon_path
 			slider = slot.findChild(name="slider")
 			slider.scale_start = 0.0
-			slider.scale_end = float(self.trade_post.get_inventory().limit)
-			# Set scale according to the settlement inventory size
+			slider.scale_end = float(min(self.trade_post.get_inventory().limit, STORAGE.ITEMS_PER_TRADE_SLOT))
+			# Set scale according to the settlement inventory size, with a cap
 			slot.findChild(name="buysell").capture(Callback(self.toggle_buysell, i))
 			fillbar = slot.findChild(name="fillbar")
 			# hide fillbar by setting position
@@ -160,7 +161,6 @@ class BuySellTab(TabInterface):
 			fillbar.position = (icon.width - fillbar.width - 1, icon.height)
 			content.addChild(slot)
 		self.widget.adaptLayout()
-
 
 	def add_resource(self, resource_id, slot_id, value=None):
 		"""
@@ -297,7 +297,7 @@ class BuySellTab(TabInterface):
 		buy_list = self.trade_post.buy_list
 		sell_list = self.trade_post.sell_list
 
-		res_filter = lambda res_id : res_id not in buy_list and res_id not in sell_list
+		res_filter = lambda res_id: res_id not in buy_list and res_id not in sell_list
 		on_click = functools.partial(self.add_resource, slot_id=slot_id)
 		inventory = self.trade_post.get_inventory()
 
@@ -310,7 +310,6 @@ class BuySellTab(TabInterface):
 		self.session.ingame_gui.minimap_to_front()
 
 		self.resources.show() # show selection widget, still display old tab icons
-
 
 	def _update_hint(self, slot_id):
 		"""Sets default hint for last updated slot"""

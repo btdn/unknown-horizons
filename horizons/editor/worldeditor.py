@@ -37,7 +37,7 @@ from horizons.util.python.callback import Callback
 
 class WorldEditor:
 	def __init__(self, world):
-		super(WorldEditor, self).__init__()
+		super().__init__() # TODO: check whether this call is needed
 		self.world = world
 		self.session = world.session
 		self.intermediate_map = IntermediateMap(world)
@@ -105,7 +105,7 @@ class WorldEditor:
 			for island_id, coords_list in self._iter_islands():
 				for x, y in coords_list:
 					tile = self.world.full_map[(x, y)]
-					db('INSERT INTO ground VALUES(?, ?, ?, ?, ?, ?)', island_id, x, y, tile.id, tile.shape, tile.rotation + 45)
+					db('INSERT INTO ground VALUES(?, ?, ?, ?, ?, ?)', island_id, x, y, tile.id, tile.shape, tile.rotation)
 			db('COMMIT')
 		except sqlite3.Error as e:
 			self.log.debug('Error: {error}'.format(error=e.args[0]))
@@ -128,14 +128,14 @@ class WorldEditor:
 
 		old_tile = self.world.full_map[coords]
 		if old_tile and old_tile.id != -1 and old_tile._instance and old_tile not in self._tile_delete_set:
-			if (old_tile.id, old_tile.shape, old_tile.rotation + 45) == tile_details:
+			if (old_tile.id, old_tile.shape, old_tile.rotation) == tile_details:
 				return
 			self._tile_delete_set.add(old_tile)
 			Scheduler().add_new_object(Callback(self._delete_tile_instance, old_tile), self, run_in=0)
 
 		(ground_id, shape, rotation) = tile_details
 		if ground_id != 0:
-			ground = Entities.grounds['%d-%s' % (ground_id, shape)](self.session, *coords)
+			ground = Entities.grounds['{:d}-{}'.format(ground_id, shape)](self.session, *coords)
 			ground.act(rotation)
 			self.world.full_map[coords] = ground
 		else:

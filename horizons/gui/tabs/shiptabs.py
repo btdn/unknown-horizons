@@ -40,7 +40,7 @@ class ShipOverviewTab(OverviewTab):
 	helptext = LazyT("Ship overview")
 
 	def init_widget(self):
-		super(ShipOverviewTab, self).init_widget()
+		super().init_widget()
 		self.ship_inv = self.instance.get_component(StorageComponent).inventory
 		self.widget.child_finder('inventory').init(self.instance.session.db, self.ship_inv)
 
@@ -63,7 +63,7 @@ class ShipOverviewTab(OverviewTab):
 		if island_without_player_settlement_found:
 			events['found_settlement'] = Callback(self.instance.session.ingame_gui._build,
 			                                      BUILDINGS.WAREHOUSE,
-			                                      weakref.ref(self.instance) )
+			                                      weakref.ref(self.instance))
 			self.widget.child_finder('found_settlement_bg').set_active()
 			self.widget.child_finder('found_settlement').set_active()
 			self.widget.child_finder('found_settlement').helptext = T("Build settlement")
@@ -111,24 +111,39 @@ class ShipOverviewTab(OverviewTab):
 			))
 		self.widget.findChild(name='inventory').apply_to_buttons(click_on_cannons, lambda b: b.res_id == WEAPONS.CANNON)
 
+	def _refresh_traderoute_config_button(self, events):
+		#verify if there are possible destinations for a traderoute
+		warehouses = self.instance.session.world.settlements
+
+		possible_warehouses = [warehouse for warehouse in warehouses if self.instance.session.world.diplomacy.can_trade(self.instance.session.world.player, warehouse.owner)]
+
+		if len(possible_warehouses) > 1:
+			events['configure_route'] = Callback(self._configure_route)
+			self.widget.findChild(name='configure_route').set_active()
+			self.widget.findChild(name='configure_route').helptext = T("Configure trade route")
+		else:
+			events['configure_route'] = None
+			self.widget.findChild(name='configure_route').set_inactive()
+			self.widget.findChild(name='configure_route').helptext = T("No available destinations for a trade route")
+
 	def refresh(self):
 		events = {
 			# show rename when you click on name
 			'name': Callback(self.instance.session.ingame_gui.show_change_name_dialog, self.instance),
-			'configure_route/mouseClicked': Callback(self._configure_route),
 		}
 
 		self._refresh_found_settlement_button(events)
 		self._refresh_trade_button(events)
+		self._refresh_traderoute_config_button(events)
 		self.widget.mapEvents(events)
 
 		self.widget.child_finder('inventory').update()
 		self._refresh_combat()
-		super(ShipOverviewTab, self).refresh()
+		super().refresh()
 
 	def hide(self):
 		self.route_menu.hide()
-		super(ShipOverviewTab, self).hide()
+		super().hide()
 
 
 class FightingShipOverviewTab(ShipOverviewTab):
@@ -139,7 +154,7 @@ class FightingShipOverviewTab(ShipOverviewTab):
 	has_stance = True
 
 	def init_widget(self):
-		super(FightingShipOverviewTab, self).init_widget()
+		super().init_widget()
 		# Create weapon inventory, needed only in gui for inventory widget.
 		self.weapon_inventory = self.instance.get_weapon_storage()
 		self.widget.findChild(name='weapon_inventory').init(self.instance.session.db, self.weapon_inventory)
@@ -170,7 +185,8 @@ class FightingShipOverviewTab(ShipOverviewTab):
 
 	def on_instance_removed(self):
 		self.weapon_inventory = None
-		super(FightingShipOverviewTab, self).on_instance_removed()
+		super().on_instance_removed()
+
 
 class TradeShipOverviewTab(ShipOverviewTab):
 	widget = 'overview_trade_ship.xml'
@@ -190,19 +206,21 @@ class TradeShipOverviewTab(ShipOverviewTab):
 		self.widget.child_finder('inventory').update()
 
 	def refresh(self):
-		super(TradeShipOverviewTab, self).refresh()
+		super().refresh()
 		events = {
 
 		        'discard_res/mouseClicked': Callback(self._discard_resources)
 		}
 		self.widget.mapEvents(events)
 		self._refresh_discard_resources()
-		super(TradeShipOverviewTab, self).refresh()
+		super().refresh()
+
 
 class TraderShipOverviewTab(OverviewTab):
 	widget = 'overview_tradership.xml'
 	icon_path = 'icons/tabwidget/ship/ship_inv'
 	helptext = LazyT("Ship overview")
+
 
 class EnemyShipOverviewTab(OverviewTab):
 	widget = 'overview_enemyunit.xml'
@@ -210,5 +228,5 @@ class EnemyShipOverviewTab(OverviewTab):
 	helptext = LazyT("Ship overview")
 
 	def init_widget(self):
-		super(EnemyShipOverviewTab, self).init_widget()
+		super().init_widget()
 		self.widget.findChild(name="headline").text = self.instance.owner.name
